@@ -1,0 +1,3 @@
+[submodule "rewilds-common"]
+	path = rewilds-common
+	url = https://github.com/player21o/rewilds-common.git
