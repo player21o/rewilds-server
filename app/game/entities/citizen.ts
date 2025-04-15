@@ -8,7 +8,7 @@ export class Citizen extends Entity implements CitizenType {
   public y: number;
 
   public constructor(name: string, sid: number, x: number, y: number) {
-    super();
+    super(sid);
 
     this.name = name;
     this.sid = sid;

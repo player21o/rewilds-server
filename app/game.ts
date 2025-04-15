@@ -4,11 +4,14 @@ import { App, DISABLED } from "uWebSockets.js";
 import { Peer, outer_packets } from "./game/outer_packets";
 import { Ws, inner_packets } from "./game/inner_packets";
 import { Entity } from "./game/entities/entity";
+import { constructors, Constructors } from "./common/constructors";
 
 export class GameServer {
   private peers: Peer[] = [];
   private peer_id_count: number = 0;
   private entities: Entity[] = [];
+  private last_entities: { [sid: number]: Constructors[keyof Constructors] } =
+    [];
 
   private last_time: number = Date.now();
 
@@ -53,7 +56,13 @@ export class GameServer {
     setInterval(() => {
       const dt = Date.now() - this.last_time;
 
-      this.entities.forEach((entity) => entity.step(dt));
+      this.entities.forEach((entity) => {
+        const desc = {};
+
+        //constructors.
+
+        //this.last_entities[entity.sid] = entity.step(dt);
+      });
 
       this.last_time = Date.now();
     }, 1000 / ticks);
