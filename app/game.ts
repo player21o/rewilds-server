@@ -54,14 +54,14 @@ export class GameServer {
 
   private game_loop(ticks: number) {
     setInterval(() => {
+      const updates: [sid: number, props: any[], bits: number][] = [];
+
       const dt = Date.now() - this.last_time;
 
       this.entities.forEach((entity) => {
-        const desc = {};
+        const [props, bits] = entity.update(dt);
 
-        //constructors.
-
-        //this.last_entities[entity.sid] = entity.step(dt);
+        if (bits != 0) updates.push([entity.sid, props, bits]);
       });
 
       this.last_time = Date.now();
