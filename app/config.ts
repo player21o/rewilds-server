@@ -5,6 +5,6 @@ export default {
   },
   game: {
     port: 8001,
-    tickrate: 20,
+    tickrate: 30,
   },
 };

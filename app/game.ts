@@ -71,7 +71,7 @@ export class GameServer {
     setInterval(() => {
       const updates: [sid: number, props: any[], bits: number][] = [];
 
-      const dt = Date.now() - this.last_time;
+      const dt = (Date.now() - this.last_time) / 1000;
 
       this.entities.forEach((entity) => {
         const [props, bits] = entity.update(dt);
@@ -80,6 +80,8 @@ export class GameServer {
       });
 
       this.last_time = Date.now();
+
+      console.log(dt);
     }, 1000 / ticks);
   }
 }
