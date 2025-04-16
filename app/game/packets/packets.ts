@@ -17,5 +17,5 @@ type Packets = {
 };
 
 export default {
-  pointer(ws, x, y) {},
+  pointer(_, __, ___) {},
 } as Packets;
