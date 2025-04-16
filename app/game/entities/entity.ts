@@ -1,10 +1,14 @@
-import { constructors, Constructors } from "../../common/constructors";
+import {
+  constructors,
+  Constructors,
+  ObjectKeysToTuple,
+} from "../../common/constructors";
 
 export class Entity<K extends keyof Constructors = "Entity"> {
   public sid: number;
 
   protected constructor_name: K;
-  private constructor_properties: Array<keyof Constructors[K]>;
+  private constructor_properties: ObjectKeysToTuple<Constructors[K]>;
 
   public constructor(sid: number, constructorName: K) {
     this.sid = sid;
@@ -13,7 +17,7 @@ export class Entity<K extends keyof Constructors = "Entity"> {
 
     this.constructor_properties = Object.keys(
       constructors[constructorName]
-    ) as Array<keyof Constructors[K]>;
+    ) as ObjectKeysToTuple<Constructors[K]>;
   }
 
   public update(dt: number): [any[], number] {
@@ -47,5 +51,6 @@ export class Entity<K extends keyof Constructors = "Entity"> {
     return [changed_props as any[], changed_bits as number];
   }
 
+  //@ts-ignore
   public step(dt: number) {}
 }
