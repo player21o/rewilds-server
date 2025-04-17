@@ -1,22 +1,21 @@
 import { WebSocket } from "uWebSockets.js";
 import {
-  Constructors,
+  ConstructorsInnerTypes,
   ConstructorsObject,
-  ObjectValuesToTuple,
 } from "../../common/constructors";
 
 export type Ws = WebSocket<unknown> & { id?: number };
 export type Peer = {
   send: <T extends keyof ConstructorsObject>(
     msg: T,
-    ...args: ObjectValuesToTuple<Constructors[T]>
+    ...args: ConstructorsInnerTypes[T]
   ) => void;
 };
 
 type Packets = {
-  [Packet in keyof Constructors]: (
+  [Packet in keyof ConstructorsInnerTypes]: (
     arg0: Ws,
-    ...args: ObjectValuesToTuple<Constructors[Packet]>
+    ...args: ConstructorsInnerTypes[Packet]
   ) => {};
 };
 

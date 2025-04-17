@@ -20,59 +20,31 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
       constructors_inner_keys[this.constructor_name];
   }
 
-  /*
   public update(dt: number): [any[], number] {
     let changed_bits = 0b0;
-    const prev_props = this.constructor_properties.map(
-      (property) =>
-        //@ts-ignore
-        constructors[this.constructor_name][
-          property as keyof (typeof constructors)[keyof typeof constructors]
-          //@ts-ignore
-        ][0](this[property]) //putting a ts-ignore because i just fucking can't
-    );
+    const constructor = constructors_object[this.constructor_name];
 
-    this.step(dt);
+    const prev_props = this.constructor_properties.map((prop) => {
+      const propName = prop as keyof typeof constructor;
+      const converterPair = constructor[propName] as readonly [
+        (val: any) => any,
+        (val: any) => any
+      ];
 
-    const changed_props: any[] = [];
-    this.constructor_properties.forEach((property, i) => {
-      //@ts-ignore
-      const network_format = constructors[this.constructor_name][
-        property as keyof (typeof constructors)[keyof typeof constructors]
-        //@ts-ignore
-      ][0](this[property]);
-
-      if (prev_props[i] !== network_format) {
-        //changed!
-        changed_props.push(network_format);
-        changed_bits |= 1 << i;
-      }
+      return converterPair[0]((this as any)[prop]);
     });
-
-    return [changed_props as any[], changed_bits as number];
-  }
-    */
-
-  public update(dt: number): [any[], number] {
-    let changed_bits = 0b0;
-
-    const prev_props = this.constructor_properties.map((prop) =>
-      //@ts-ignore
-      constructors_object[this.constructor_name][
-        prop as keyof (typeof constructors_object)[keyof typeof constructors_object]
-        //@ts-ignore
-      ][0](this[prop])
-    );
 
     this.step(dt);
 
     const changed_props: any[] = [];
     this.constructor_properties.forEach((prop, i) => {
-      //@ts-ignore
-      const formatted = constructors_object[this.constructor_name][
-        prop as keyof (typeof constructors_object)[keyof typeof constructors_object]
-        //@ts-ignore
-      ][0](this[prop]);
+      const propName = prop as keyof typeof constructor;
+      const converterPair = constructor[propName] as readonly [
+        (val: any) => any,
+        (val: any) => any
+      ];
+
+      const formatted = converterPair[0]((this as any)[prop]);
 
       if (prev_props[i] !== formatted) {
         //changed!
@@ -81,7 +53,7 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
       }
     });
 
-    return [changed_props as any[], changed_bits as number];
+    return [changed_props, changed_bits];
   }
 
   //@ts-ignore

@@ -3,9 +3,9 @@ import { decode, encode } from "@msgpack/msgpack";
 import { App, DISABLED } from "uWebSockets.js";
 import { Entity } from "./game/entities/entity";
 import {
-  constructors,
   constructors_inner_keys,
   constructors_keys,
+  constructors_object,
 } from "./common/constructors";
 import packets, { Peer, Ws } from "./game/packets/packets";
 
@@ -25,12 +25,17 @@ export class GameServer {
         open: (ws: Ws) => {
           this.peers.push({
             send: (msg, ...args) => {
-              const data = constructors_inner_keys[msg].map((attr, i) =>
-                //@ts-ignore
-                constructors[msg][
-                  attr as keyof (typeof constructors)[keyof typeof constructors]
-                ][0](args[i])
-              );
+              const constructor = constructors_object[msg];
+
+              const data = constructors_inner_keys[msg].map((prop, i) => {
+                const propName = prop as keyof typeof constructor;
+                const converterPair = constructor[propName] as readonly [
+                  (val: any) => any,
+                  (val: any) => any
+                ];
+
+                return converterPair[0](args[i]);
+              });
 
               ws.send(encode([constructors_keys.indexOf(msg), data]), true);
             },
@@ -47,21 +52,23 @@ export class GameServer {
             ...args: Parameters<(typeof packets)[keyof typeof packets]>
           ] = decode(msg) as any;
 
-          const formatted = [];
+          const formatted: any[] = [];
           const sliced = packet.slice(1);
-          const constructor = constructors_keys[packet[0]];
-          const props = constructors_inner_keys[constructor];
+          const constructor_name = constructors_keys[packet[0]];
+          const constructor = constructors_object[constructor_name];
+          const props = constructors_inner_keys[constructor_name];
 
           for (let i = 0, n = sliced.length; i < n; ++i) {
-            formatted.push(
-              //@ts-ignore
-              constructors[constructor][
-                props[i] as keyof (typeof constructors)[typeof constructor]
-              ][1](sliced[i])
-            );
+            const propName = props[i] as keyof typeof constructor;
+            const converterPair = constructor[propName] as readonly [
+              (val: any) => any,
+              (val: any) => any
+            ];
+
+            formatted.push(converterPair[1](sliced[i]));
           }
 
-          packets[constructor](ws, formatted as any);
+          packets[constructor_name](ws, formatted as any);
         },
       })
       .listen(port, () => {});
