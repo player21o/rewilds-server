@@ -88,7 +88,7 @@ export class GameServer {
 
       this.last_time = Date.now();
 
-      console.log(dt);
+      //console.log(dt);
     }, 1000 / ticks);
   }
 }
