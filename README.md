@@ -4,8 +4,6 @@ A server for [rewilds](https://github.com/player21o/rewilds).
 
 # Installation
 
-# Installation
-
 1. First, install node.js and npm. Then clone the repository (**recurse-submodules is mandatory**):
    `git clone https://github.com/player21o/rewilds-server.git --recurse-submodules`
 
