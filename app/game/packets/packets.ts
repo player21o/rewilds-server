@@ -23,4 +23,7 @@ type Packets = {
 
 export default {
   pointer(_, __, ___) {},
+  hello(_) {
+    console.log("received hello packet from peer " + _.id);
+  },
 } as Packets;

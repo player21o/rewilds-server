@@ -49,13 +49,34 @@ export class GameServer {
           setTimeout(() => peer.send("hello"), 1000);
         },
         message: (ws: Ws, msg) => {
-          const packet: [
-            packet: number,
-            ...args: Parameters<(typeof packets)[keyof typeof packets]>
-          ] = decode(msg) as any;
+          /*
+          (data as Blob).arrayBuffer().then((buffer) => {
+        const packet: [packet: number, ...args: any[]] = decode(buffer) as any;
+
+        const formatted: any[] = [];
+        const sliced = packet[1].slice(1);
+        const constructor_name = constructors_keys[packet[0]];
+        const constructor = constructors_object[constructor_name];
+        const props = constructors_inner_keys[constructor_name];
+
+        for (let i = 0, n = sliced.length; i < n; ++i) {
+          const propName = props[i] as keyof typeof constructor;
+          const converterPair = constructor[propName] as readonly [
+            (val: any) => any,
+            (val: any) => any
+          ];
+
+          formatted.push(converterPair[1](sliced[i]));
+        }
+
+        packets[constructor_name](this, formatted as any);
+      });
+          */
+
+          const packet: [packet: number, any[]] = decode(msg) as any;
 
           const formatted: any[] = [];
-          const sliced = packet.slice(1);
+          const sliced = packet[1].slice(1);
           const constructor_name = constructors_keys[packet[0]];
           const constructor = constructors_object[constructor_name];
           const props = constructors_inner_keys[constructor_name];
