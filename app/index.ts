@@ -3,4 +3,4 @@ import { GameServer } from "./game";
 import { LobbyServer } from "./lobby";
 
 const lobby = new LobbyServer();
-const game = new GameServer(8001, config.game.tickrate);
+const game = new GameServer(config.game.port, config.game.tickrate);

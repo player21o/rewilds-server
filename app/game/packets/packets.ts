@@ -10,11 +10,13 @@ export type Peer = {
     msg: T,
     ...args: ConstructorsInnerTypes[T]
   ) => void;
+  id: number;
+  ws: Ws;
 };
 
 type Packets = {
   [Packet in keyof ConstructorsInnerTypes]: (
-    arg0: Ws,
+    arg0: Peer,
     ...args: ConstructorsInnerTypes[Packet]
   ) => {};
 };

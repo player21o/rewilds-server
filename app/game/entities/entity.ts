@@ -6,14 +6,12 @@ import {
 } from "../../common/constructors";
 
 export class Entity<K extends keyof ConstructorsObject = "Entity"> {
-  public sid: number;
+  public sid: number = -1;
 
   protected constructor_name: K;
   private constructor_properties: ConstructorsInnerKeys[K];
 
-  public constructor(sid: number, constructorName: K) {
-    this.sid = sid;
-
+  public constructor(constructorName: K) {
     this.constructor_name = constructorName;
 
     this.constructor_properties =

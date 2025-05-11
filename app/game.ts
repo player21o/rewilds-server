@@ -1,18 +1,22 @@
 // game.ts
 import { decode, encode } from "@msgpack/msgpack";
 import { App, DISABLED } from "uWebSockets.js";
-import { Entity } from "./game/entities/entity";
 import {
   constructors_inner_keys,
   constructors_keys,
   constructors_object,
+  ConstructorsInnerTypes,
+  ConstructorsObject,
 } from "./common/constructors";
 import packets, { Peer, Ws } from "./game/packets/packets";
+import { EntitiesManager } from "./game/entities";
+import { Citizen } from "./game/entities/citizen";
 
 export class GameServer {
   private peers: Peer[] = [];
   private peer_id_count: number = 0;
-  private entities: Entity[] = [];
+  private peer_ids: { [id: number]: Peer } = {};
+  private entities = new EntitiesManager();
 
   private last_time: number = Date.now();
 
@@ -23,28 +27,25 @@ export class GameServer {
       .ws("/*", {
         compression: DISABLED,
         open: (ws: Ws) => {
-          this.peers.push({
+          const peer: Peer = {
             send: (msg, ...args) => {
-              const constructor = constructors_object[msg];
-
-              const data = constructors_inner_keys[msg].map((prop, i) => {
-                const propName = prop as keyof typeof constructor;
-                const converterPair = constructor[propName] as readonly [
-                  (val: any) => any,
-                  (val: any) => any
-                ];
-
-                return converterPair[0](args[i]);
-              });
-
-              ws.send(encode([constructors_keys.indexOf(msg), data]), true);
+              this.send(peer.id, msg, ...args);
             },
-          });
+            id: this.peer_id_count,
+            ws: ws,
+          };
 
-          ws.id = this.peer_id_count;
+          ws.id = peer.id;
           ws.subscribe("global");
 
+          this.peers.push(peer);
+          this.peer_ids[ws.id!] = peer;
           this.peer_id_count += 1;
+
+          const citizen = new Citizen("hui", 0, 0);
+          this.entities.add(citizen);
+
+          peer.send("update", [[1, 2, 3]]);
         },
         message: (ws: Ws, msg) => {
           const packet: [
@@ -68,10 +69,31 @@ export class GameServer {
             formatted.push(converterPair[1](sliced[i]));
           }
 
-          packets[constructor_name](ws, formatted as any);
+          packets[constructor_name](this.peer_ids[ws.id!], formatted as any);
         },
       })
       .listen(port, () => {});
+  }
+
+  private send<T extends keyof ConstructorsObject>(
+    peer_id: keyof typeof this.peer_ids,
+    msg: T,
+    ...args: ConstructorsInnerTypes[T]
+  ) {
+    const peer = this.peer_ids[peer_id];
+    const constructor = constructors_object[msg];
+
+    const data = constructors_inner_keys[msg].map((prop, i) => {
+      const propName = prop as keyof typeof constructor;
+      const converterPair = constructor[propName] as readonly [
+        (val: any) => any,
+        (val: any) => any
+      ];
+
+      return converterPair[0](args[i]);
+    });
+
+    peer.ws.send(encode([constructors_keys.indexOf(msg), data]), true);
   }
 
   private game_loop(ticks: number) {
@@ -87,8 +109,6 @@ export class GameServer {
       });
 
       this.last_time = Date.now();
-
-      //console.log(dt);
     }, 1000 / ticks);
   }
 }
