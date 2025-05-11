@@ -45,7 +45,8 @@ export class GameServer {
           const citizen = new Citizen("hui", 0, 0);
           this.entities.add(citizen);
 
-          peer.send("update", [[1, 2, 3]]);
+          //peer.send("update", [[1, 2, 3]]);
+          setTimeout(() => peer.send("hello"), 1000);
         },
         message: (ws: Ws, msg) => {
           const packet: [
@@ -92,6 +93,8 @@ export class GameServer {
 
       return converterPair[0](args[i]);
     });
+
+    //console.log(encode([constructors_keys.indexOf(msg), data]));
 
     peer.ws.send(encode([constructors_keys.indexOf(msg), data]), true);
   }
