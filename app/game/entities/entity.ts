@@ -2,6 +2,7 @@ import {
   constructors_inner_keys,
   constructors_object,
   ConstructorsInnerKeys,
+  ConstructorsInnerTypes,
   ConstructorsObject,
 } from "../../common/constructors";
 
@@ -16,6 +17,10 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
 
     this.constructor_properties =
       constructors_inner_keys[this.constructor_name];
+  }
+
+  public snapshot(): ConstructorsInnerTypes[K] {
+    const formatted = [];
   }
 
   public update(dt: number): [any[], number] {

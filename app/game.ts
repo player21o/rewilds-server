@@ -1,6 +1,6 @@
 // game.ts
 import { decode, encode } from "@msgpack/msgpack";
-import { App, DISABLED } from "uWebSockets.js";
+import { App, DISABLED, TemplatedApp } from "uWebSockets.js";
 import {
   constructors_inner_keys,
   constructors_keys,
@@ -18,14 +18,20 @@ export class GameServer {
   private peer_ids: { [id: number]: Peer } = {};
   private entities = new EntitiesManager();
 
+  private app: TemplatedApp;
+
   private last_time: number = Date.now();
 
   constructor(port: number, tickrate: number) {
     this.game_loop(tickrate);
 
-    App({})
+    this.app = App({})
       .ws("/*", {
         compression: DISABLED,
+        close: (ws: Ws) => {
+          this.peers = this.peers.filter((p) => p.id != ws.id!);
+          delete this.peer_ids[ws.id!];
+        },
         open: (ws: Ws) => {
           const peer: Peer = {
             send: (msg, ...args) => {
@@ -49,30 +55,6 @@ export class GameServer {
           setTimeout(() => peer.send("hello"), 1000);
         },
         message: (ws: Ws, msg) => {
-          /*
-          (data as Blob).arrayBuffer().then((buffer) => {
-        const packet: [packet: number, ...args: any[]] = decode(buffer) as any;
-
-        const formatted: any[] = [];
-        const sliced = packet[1].slice(1);
-        const constructor_name = constructors_keys[packet[0]];
-        const constructor = constructors_object[constructor_name];
-        const props = constructors_inner_keys[constructor_name];
-
-        for (let i = 0, n = sliced.length; i < n; ++i) {
-          const propName = props[i] as keyof typeof constructor;
-          const converterPair = constructor[propName] as readonly [
-            (val: any) => any,
-            (val: any) => any
-          ];
-
-          formatted.push(converterPair[1](sliced[i]));
-        }
-
-        packets[constructor_name](this, formatted as any);
-      });
-          */
-
           const packet: [packet: number, any[]] = decode(msg) as any;
 
           const formatted: any[] = [];
@@ -97,12 +79,21 @@ export class GameServer {
       .listen(port, () => {});
   }
 
-  private send<T extends keyof ConstructorsObject>(
-    peer_id: keyof typeof this.peer_ids,
+  private broadcast<T extends keyof ConstructorsObject>(
     msg: T,
     ...args: ConstructorsInnerTypes[T]
   ) {
-    const peer = this.peer_ids[peer_id];
+    this.app.publish(
+      "global",
+      encode(this.construct_packet(msg, ...args)),
+      true
+    );
+  }
+
+  private construct_packet<T extends keyof ConstructorsObject>(
+    msg: T,
+    ...args: ConstructorsInnerTypes[T]
+  ) {
     const constructor = constructors_object[msg];
 
     const data = constructors_inner_keys[msg].map((prop, i) => {
@@ -115,9 +106,18 @@ export class GameServer {
       return converterPair[0](args[i]);
     });
 
-    //console.log(encode([constructors_keys.indexOf(msg), data]));
+    return [constructors_keys.indexOf(msg), data];
+  }
 
-    peer.ws.send(encode([constructors_keys.indexOf(msg), data]), true);
+  private send<T extends keyof ConstructorsObject>(
+    peer_id: keyof typeof this.peer_ids,
+    msg: T,
+    ...args: ConstructorsInnerTypes[T]
+  ) {
+    this.peer_ids[peer_id].ws.send(
+      encode(this.construct_packet(msg, ...args)),
+      true
+    );
   }
 
   private game_loop(ticks: number) {
@@ -131,6 +131,11 @@ export class GameServer {
 
         if (bits != 0) updates.push([entity.sid, props, bits]);
       });
+
+      this.broadcast(
+        "update",
+        updates.map((u) => [u[0], u[2], ...u[1]])
+      );
 
       this.last_time = Date.now();
     }, 1000 / ticks);
