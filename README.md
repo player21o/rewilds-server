@@ -1,5 +1,7 @@
 # rewilds-server
 
+[![wakatime](https://wakatime.com/badge/user/d268221e-c09b-4227-a1be-7ad8bf00b4a4/project/2793c7ed-f591-4efb-bcfc-5f1915ca69b7.svg)](https://wakatime.com/badge/user/d268221e-c09b-4227-a1be-7ad8bf00b4a4/project/2793c7ed-f591-4efb-bcfc-5f1915ca69b7)
+
 A server for [rewilds](https://github.com/player21o/rewilds).
 
 # Installation
