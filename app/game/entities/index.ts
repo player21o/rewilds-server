@@ -33,4 +33,8 @@ export class EntitiesManager {
   public forEach(callback: (arg0: Entity) => void) {
     this.entities.forEach(callback);
   }
+
+  get snapshot() {
+    return this.entities.map((e) => e.snapshot());
+  }
 }

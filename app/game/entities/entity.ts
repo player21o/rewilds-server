@@ -1,8 +1,8 @@
 import {
   constructors_inner_keys,
+  constructors_keys,
   constructors_object,
   ConstructorsInnerKeys,
-  ConstructorsInnerTypes,
   ConstructorsObject,
 } from "../../common/constructors";
 
@@ -19,8 +19,21 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
       constructors_inner_keys[this.constructor_name];
   }
 
-  public snapshot(): ConstructorsInnerTypes[K] {
-    const formatted = [];
+  public snapshot(): any {
+    const constructor = constructors_object[this.constructor_name];
+    //console.log(constructor, this.constructor_properties);
+
+    return [constructors_keys.indexOf(this.constructor_name)].concat(
+      ...this.constructor_properties.map((prop) => {
+        const propName = prop as keyof typeof constructor;
+        const converterPair = constructor[propName] as readonly [
+          (val: any) => any,
+          (val: any) => any
+        ];
+
+        return converterPair[0]((this as any)[prop]);
+      })
+    ) as any;
   }
 
   public update(dt: number): [any[], number] {

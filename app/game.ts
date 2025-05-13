@@ -52,7 +52,8 @@ export class GameServer {
           this.entities.add(citizen);
 
           //peer.send("update", [[1, 2, 3]]);
-          setTimeout(() => peer.send("hello"), 1000);
+          //console.log(this.entities.snapshot);
+          setTimeout(() => peer.send("snapshot", this.entities.snapshot), 1000);
         },
         message: (ws: Ws, msg) => {
           const packet: [packet: number, any[]] = decode(msg) as any;
@@ -132,10 +133,10 @@ export class GameServer {
         if (bits != 0) updates.push([entity.sid, props, bits]);
       });
 
-      this.broadcast(
-        "update",
-        updates.map((u) => [u[0], u[2], ...u[1]])
-      );
+      //this.broadcast(
+      //  "update",
+      //  updates.map((u) => [u[0], u[2], ...u[1]])
+      //);
 
       this.last_time = Date.now();
     }, 1000 / ticks);
