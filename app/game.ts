@@ -48,7 +48,11 @@ export class GameServer {
           this.peer_ids[ws.id!] = peer;
           this.peer_id_count += 1;
 
-          const citizen = new Citizen("hui", 0, 0);
+          const citizen = new Citizen(
+            "hui",
+            Math.random() * 50,
+            Math.random() * 50
+          );
           this.entities.add(citizen);
 
           //peer.send("update", [[1, 2, 3]]);
