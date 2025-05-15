@@ -3,6 +3,7 @@ import {
   ConstructorsInnerTypes,
   ConstructorsObject,
 } from "../../common/constructors";
+import { Citizen } from "../entities/citizen";
 
 export type Ws = WebSocket<unknown> & { id?: number };
 export type Peer = {
@@ -12,6 +13,7 @@ export type Peer = {
   ) => void;
   id: number;
   ws: Ws;
+  citizen: Citizen | null;
 };
 
 type Packets = {
@@ -24,6 +26,12 @@ type Packets = {
 export default {
   pointer(_, __, ___) {},
   hello(_) {
-    console.log("received hello packet from peer " + _.id);
+    //console.log("received hello packet from peer " + _.id);
+  },
+  keys({ citizen }, keys) {
+    if (citizen == null) return;
+
+    citizen.keys = keys;
+    //console.log(keys);
   },
 } as Packets;

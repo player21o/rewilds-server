@@ -39,6 +39,7 @@ export class GameServer {
             },
             id: this.peer_id_count,
             ws: ws,
+            citizen: null,
           };
 
           ws.id = peer.id;
@@ -54,6 +55,7 @@ export class GameServer {
             Math.random() * 50
           );
           this.entities.add(citizen);
+          peer.citizen = citizen;
 
           //peer.send("update", [[1, 2, 3]]);
           //console.log(this.entities.snapshot);
@@ -66,7 +68,7 @@ export class GameServer {
           const packet: [packet: number, any[]] = decode(msg) as any;
 
           const formatted: any[] = [];
-          const sliced = packet[1].slice(1);
+          const sliced = packet[1];
           const constructor_name = constructors_keys[packet[0]];
           const constructor = constructors_object[constructor_name];
           const props = constructors_inner_keys[constructor_name];
@@ -81,7 +83,7 @@ export class GameServer {
             formatted.push(converterPair[1](sliced[i]));
           }
 
-          packets[constructor_name](this.peer_ids[ws.id!], formatted as any);
+          packets[constructor_name](this.peer_ids[ws.id!], formatted[0] as any);
         },
       })
       .listen(port, () => {});
@@ -140,10 +142,10 @@ export class GameServer {
         if (bits != 0) updates.push([entity.sid, props, bits]);
       });
 
-      //this.broadcast(
-      //  "update",
-      //  updates.map((u) => [u[0], u[2], ...u[1]])
-      //);
+      this.broadcast(
+        "update",
+        updates.map((u) => [u[0], u[2], ...u[1]])
+      );
 
       this.last_time = Date.now();
     }, 1000 / ticks);
