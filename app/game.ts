@@ -57,7 +57,10 @@ export class GameServer {
 
           //peer.send("update", [[1, 2, 3]]);
           //console.log(this.entities.snapshot);
-          setTimeout(() => peer.send("snapshot", this.entities.snapshot), 1000);
+          setTimeout(() => {
+            peer.send("snapshot", this.entities.snapshot);
+            peer.send("your_sid", citizen.sid);
+          }, 1000);
         },
         message: (ws: Ws, msg) => {
           const packet: [packet: number, any[]] = decode(msg) as any;
