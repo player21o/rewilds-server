@@ -24,7 +24,14 @@ type Packets = {
 };
 
 export default {
-  pointer(_, __, ___) {},
+  pointer({ citizen }, pX, pY) {
+    if (citizen == null) return;
+
+    const [pointerX, pointerY] = [citizen.x + pX, citizen.y + pY];
+
+    citizen.pointerX = pointerX;
+    citizen.pointerY = pointerY;
+  },
   hello(_) {
     //console.log("received hello packet from peer " + _.id);
   },

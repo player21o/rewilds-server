@@ -1,4 +1,5 @@
 import { CitizenType } from "../../common/interfaces";
+import { lookAt } from "../utils";
 import { Entity } from "./entity";
 
 export class Citizen extends Entity<"Citizen"> implements CitizenType {
@@ -9,6 +10,8 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
   public health = 10;
 
   public keys = 0;
+  public pointerX = 0;
+  public pointerY = 0;
 
   public constructor(name: string, x: number, y: number) {
     super("Citizen");
@@ -18,7 +21,11 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
     this.y = y;
   }
 
-  public step(dt: number) {
+  public handle_pointer() {
+    this.direction = lookAt(this.x, this.y, this.pointerX, this.pointerY);
+  }
+
+  public handle_movement(dt: number) {
     //w, a, s, d
     const final_vector = [0, 0];
 
@@ -46,5 +53,10 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
 
     this.x += 300 * final_vector[0] * dt;
     this.y += 300 * final_vector[1] * dt;
+  }
+
+  public step(dt: number) {
+    this.handle_movement(dt);
+    this.handle_pointer();
   }
 }

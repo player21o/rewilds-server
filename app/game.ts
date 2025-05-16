@@ -83,7 +83,10 @@ export class GameServer {
             formatted.push(converterPair[1](sliced[i]));
           }
 
-          packets[constructor_name](this.peer_ids[ws.id!], formatted[0] as any);
+          packets[constructor_name](
+            this.peer_ids[ws.id!],
+            ...(formatted as any)
+          );
         },
       })
       .listen(port, () => {});
