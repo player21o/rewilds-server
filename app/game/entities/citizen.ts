@@ -22,7 +22,12 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
   }
 
   public handle_pointer() {
-    this.direction = lookAt(this.x, this.y, this.pointerX, this.pointerY);
+    this.direction = lookAt(
+      this.x,
+      this.y,
+      this.x + this.pointerX,
+      this.y + this.pointerY
+    );
   }
 
   public handle_movement(dt: number) {

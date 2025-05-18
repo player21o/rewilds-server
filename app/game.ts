@@ -127,10 +127,11 @@ export class GameServer {
     msg: T,
     ...args: ConstructorsInnerTypes[T]
   ) {
-    this.peer_ids[peer_id].ws.send(
-      encode(this.construct_packet(msg, ...args)),
-      true
-    );
+    if (this.peer_ids[peer_id].ws != undefined)
+      this.peer_ids[peer_id].ws.send(
+        encode(this.construct_packet(msg, ...args)),
+        true
+      );
   }
 
   private game_loop(ticks: number) {

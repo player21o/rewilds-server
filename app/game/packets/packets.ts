@@ -27,10 +27,10 @@ export default {
   pointer({ citizen }, pX, pY) {
     if (citizen == null) return;
 
-    const [pointerX, pointerY] = [citizen.x + pX, citizen.y + pY];
+    //const [pointerX, pointerY] = [citizen.x + pX, citizen.y + pY];
 
-    citizen.pointerX = pointerX;
-    citizen.pointerY = pointerY;
+    citizen.pointerX = pX;
+    citizen.pointerY = pY;
   },
   hello(_) {
     //console.log("received hello packet from peer " + _.id);
