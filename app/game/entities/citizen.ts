@@ -56,8 +56,8 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
       final_vector[1] = final_vector[1] / vec_len;
     }
 
-    this.x += 300 * final_vector[0] * dt;
-    this.y += 300 * final_vector[1] * dt;
+    this.x += 150 * final_vector[0] * dt;
+    this.y += 150 * final_vector[1] * dt;
   }
 
   public step(dt: number) {

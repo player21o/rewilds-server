@@ -127,7 +127,7 @@ export class GameServer {
     msg: T,
     ...args: ConstructorsInnerTypes[T]
   ) {
-    if (this.peer_ids[peer_id].ws != undefined)
+    if (this.peer_ids[peer_id] != undefined)
       this.peer_ids[peer_id].ws.send(
         encode(this.construct_packet(msg, ...args)),
         true
