@@ -12,6 +12,8 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
   protected constructor_name: K;
   private constructor_properties: ConstructorsInnerKeys[K];
 
+  private new_one = true;
+
   public constructor(constructorName: K) {
     this.constructor_name = constructorName;
 
@@ -40,36 +42,57 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
     let changed_bits = 0b0;
     const constructor = constructors_object[this.constructor_name];
 
-    const prev_props = this.constructor_properties.map((prop) => {
-      const propName = prop as keyof typeof constructor;
-      const converterPair = constructor[propName] as readonly [
-        (val: any) => any,
-        (val: any) => any
+    if (!this.new_one) {
+      const prev_props = this.constructor_properties.map((prop) => {
+        const propName = prop as keyof typeof constructor;
+        const converterPair = constructor[propName] as readonly [
+          (val: any) => any,
+          (val: any) => any
+        ];
+
+        return converterPair[0]((this as any)[prop]);
+      });
+
+      this.step(dt);
+
+      const changed_props: any[] = [];
+      this.constructor_properties.forEach((prop, i) => {
+        const propName = prop as keyof typeof constructor;
+        const converterPair = constructor[propName] as readonly [
+          (val: any) => any,
+          (val: any) => any
+        ];
+
+        const formatted = converterPair[0]((this as any)[prop]);
+
+        if (prev_props[i] !== formatted) {
+          //changed!
+          changed_props.push(formatted);
+          changed_bits |= 1 << i;
+        }
+      });
+
+      return [changed_props, changed_bits];
+    } else {
+      const changed_props: any[] = [
+        constructors_keys.indexOf(this.constructor_name),
       ];
+      this.constructor_properties.forEach((prop, i) => {
+        const propName = prop as keyof typeof constructor;
+        const converterPair = constructor[propName] as readonly [
+          (val: any) => any,
+          (val: any) => any
+        ];
 
-      return converterPair[0]((this as any)[prop]);
-    });
-
-    this.step(dt);
-
-    const changed_props: any[] = [];
-    this.constructor_properties.forEach((prop, i) => {
-      const propName = prop as keyof typeof constructor;
-      const converterPair = constructor[propName] as readonly [
-        (val: any) => any,
-        (val: any) => any
-      ];
-
-      const formatted = converterPair[0]((this as any)[prop]);
-
-      if (prev_props[i] !== formatted) {
-        //changed!
+        const formatted = converterPair[0]((this as any)[prop]);
         changed_props.push(formatted);
         changed_bits |= 1 << i;
-      }
-    });
+      });
 
-    return [changed_props, changed_bits];
+      this.new_one = false;
+
+      return [changed_props, changed_bits];
+    }
   }
 
   //@ts-ignore
