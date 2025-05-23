@@ -8,7 +8,8 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
   public y: number;
   public direction = 0;
   public health = 10;
-  public team = 2 as const;
+  public team: CitizenType["team"] = 2;
+  public state: CitizenType["state"] = "idle";
 
   public keys = 0;
   public pointerX = 0;
