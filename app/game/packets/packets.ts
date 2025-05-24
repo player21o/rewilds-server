@@ -41,4 +41,16 @@ export default {
     citizen.keys = keys;
     //console.log(keys);
   },
+  action({ citizen }, action) {
+    if (citizen == null) return;
+
+    switch (action) {
+      case "growl_start":
+        citizen.state_manager.set("charge");
+        break;
+      case "growl_stop":
+        citizen.state_manager.set("idle");
+        break;
+    }
+  },
 } as Packets;
