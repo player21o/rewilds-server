@@ -20,6 +20,7 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
     this,
     this.state
   );
+  public stamina = 10;
 
   public constructor(name: string, x: number, y: number) {
     super("Citizen");
