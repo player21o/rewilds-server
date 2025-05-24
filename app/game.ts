@@ -1,5 +1,5 @@
 // game.ts
-import { decode, encode } from "@msgpack/msgpack";
+import { encode } from "@msgpack/msgpack";
 import { App, DISABLED, TemplatedApp } from "uWebSockets.js";
 import {
   constructors_inner_keys,
@@ -11,6 +11,7 @@ import {
 import packets, { Peer, Ws } from "./game/packets/packets";
 import { EntitiesManager } from "./game/entities";
 import { Citizen } from "./game/entities/citizen";
+import { pack, unpack } from "msgpackr";
 
 export class GameServer {
   private peers: Peer[] = [];
@@ -65,7 +66,9 @@ export class GameServer {
           }, 1000);
         },
         message: (ws: Ws, msg) => {
-          const packet: [packet: number, any[]] = decode(msg) as any;
+          const packet: [packet: number, any[]] = unpack(
+            new Uint8Array(msg)
+          ) as any;
 
           const formatted: any[] = [];
           const sliced = packet[1];
@@ -129,7 +132,7 @@ export class GameServer {
   ) {
     if (this.peer_ids[peer_id] != undefined)
       this.peer_ids[peer_id].ws.send(
-        encode(this.construct_packet(msg, ...args)),
+        pack(this.construct_packet(msg, ...args)),
         true
       );
   }
