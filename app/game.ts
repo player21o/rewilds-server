@@ -1,5 +1,4 @@
 // game.ts
-import { encode } from "@msgpack/msgpack";
 import { App, DISABLED, TemplatedApp } from "uWebSockets.js";
 import {
   constructors_inner_keys,
@@ -99,11 +98,7 @@ export class GameServer {
     msg: T,
     ...args: ConstructorsInnerTypes[T]
   ) {
-    this.app.publish(
-      "global",
-      encode(this.construct_packet(msg, ...args)),
-      true
-    );
+    this.app.publish("global", pack(this.construct_packet(msg, ...args)), true);
   }
 
   private construct_packet<T extends keyof ConstructorsObject>(
