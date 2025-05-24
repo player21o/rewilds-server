@@ -17,13 +17,14 @@ export class GameServer {
   private peer_id_count: number = 0;
   private peer_ids: { [id: number]: Peer } = {};
   private entities = new EntitiesManager();
+  private entities_updates: any = [];
 
   private app: TemplatedApp;
 
   private last_time: number = Date.now();
 
-  constructor(port: number, tickrate: number) {
-    this.game_loop(tickrate);
+  constructor(port: number, tickrate: number, upd_tickrate: number) {
+    this.game_loop(tickrate, upd_tickrate);
 
     this.app = App({})
       .ws("/*", {
@@ -132,7 +133,7 @@ export class GameServer {
       );
   }
 
-  private game_loop(ticks: number) {
+  private game_loop(ticks: number, update_ticks: number) {
     setInterval(() => {
       const updates: [sid: number, props: any[], bits: number][] = [];
 
@@ -144,12 +145,14 @@ export class GameServer {
         if (bits != 0) updates.push([entity.sid, props, bits]);
       });
 
-      this.broadcast(
-        "update",
-        updates.map((u) => [u[0], u[2], ...u[1]])
-      );
+      this.entities_updates.push(...updates.map((u) => [u[0], u[2], ...u[1]]));
 
       this.last_time = Date.now();
     }, 1000 / ticks);
+
+    setInterval(() => {
+      this.broadcast("update", this.entities_updates);
+      this.entities_updates = [];
+    }, 1000 / update_ticks);
   }
 }

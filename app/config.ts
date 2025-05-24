@@ -6,5 +6,6 @@ export default {
   game: {
     port: 8002,
     tickrate: 30,
+    updates_tickrate: 30,
   },
 };
