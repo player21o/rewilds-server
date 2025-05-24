@@ -50,7 +50,7 @@ export default {
   },
   growl: {
     step(dt, entity, _manager) {
-      handle_movement(entity, dt, 300);
+      handle_movement(entity, dt, 180);
       handle_pointer(entity);
     },
   },
