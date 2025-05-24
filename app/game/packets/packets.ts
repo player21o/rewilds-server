@@ -46,7 +46,7 @@ export default {
 
     switch (action) {
       case "growl_start":
-        citizen.state_manager.set("charge");
+        citizen.state_manager.set("growl");
         break;
       case "growl_stop":
         citizen.state_manager.set("idle");

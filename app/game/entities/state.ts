@@ -17,6 +17,7 @@ export class StateManager<T = any> {
     if (state == this.state) return;
 
     let s = this.states[this.state as keyof typeof this.states];
+    console.log("first s", s);
 
     if (this.state != null)
       if (s.leave != undefined) s.leave(this.entity, this);
@@ -25,6 +26,7 @@ export class StateManager<T = any> {
     this.duration = 0;
 
     s = this.states[this.state as keyof typeof this.states];
+    console.log("second s", s, state);
 
     if (s.enter != undefined) s.enter(this.entity, this);
   }
