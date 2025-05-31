@@ -50,7 +50,7 @@ export default {
   },
   growl: {
     step(dt, entity, _manager) {
-      handle_movement(entity, dt, 180);
+      handle_movement(entity, dt, 150 * 1.333);
       handle_pointer(entity);
       entity.stamina -= 0.1 * dt;
     },
