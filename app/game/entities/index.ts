@@ -5,11 +5,18 @@ export class EntitiesManager {
   private entities: Entity[] = [];
   private sid_counter = 0;
 
+  private on_entity_created_callbacks: ((entity: Entity) => void)[] = [];
+
+  public on_entity_created(cb: (entity: Entity) => void) {
+    this.on_entity_created_callbacks.push(cb);
+  }
+
   public add(e: any) {
     e.sid = this.sid_counter;
     this.sid_counter += 1;
     this.sid_map[e.sid] = e;
     this.entities.push(e);
+    this.on_entity_created_callbacks.forEach((cb) => cb(e));
   }
 
   public get(sid: number) {
@@ -36,5 +43,9 @@ export class EntitiesManager {
 
   get snapshot() {
     return this.entities.map((e) => e.snapshot());
+  }
+
+  public stop() {
+    this.on_entity_created_callbacks = [];
   }
 }
