@@ -10,9 +10,9 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
   public sid: number = -1;
 
   protected constructor_name: K;
-  private constructor_properties: ConstructorsInnerKeys[K];
+  protected constructor_properties: ConstructorsInnerKeys[K];
 
-  private new_one = true;
+  protected new_one = true;
 
   public constructor(constructorName: K) {
     this.constructor_name = constructorName;

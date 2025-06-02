@@ -154,5 +154,19 @@ export class GameServer {
       this.broadcast("update", this.entities_updates);
       this.entities_updates = [];
     }, 1000 / update_ticks);
+
+    setInterval(() => {
+      this.peers.forEach((p) => {
+        if (p.citizen != null) {
+          p.send(
+            "private",
+            p.citizen.private_data_changes.bits,
+            p.citizen.private_data_changes.data
+          );
+          p.citizen.private_data_changes.bits = 0b0;
+          p.citizen.private_data_changes.data = [];
+        }
+      });
+    }, 1000 / 5);
   }
 }
