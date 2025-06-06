@@ -1,3 +1,4 @@
+import { System } from "detect-collisions";
 import { Entity } from "./entity";
 
 export class EntitiesManager {
@@ -11,12 +12,13 @@ export class EntitiesManager {
     this.on_entity_created_callbacks.push(cb);
   }
 
-  public add(e: any) {
+  public add(e: any, collision_system: System) {
     e.sid = this.sid_counter;
     this.sid_counter += 1;
     this.sid_map[e.sid] = e;
     this.entities.push(e);
     this.on_entity_created_callbacks.forEach((cb) => cb(e));
+    if (e.collision != null) collision_system.insert(e.collision);
   }
 
   public get(sid: number) {

@@ -6,13 +6,18 @@ import {
   ConstructorsObject,
 } from "../../common/constructors";
 
+import { Polygon, Response, System } from "detect-collisions";
+
 export class Entity<K extends keyof ConstructorsObject = "Entity"> {
   public sid: number = -1;
+  public x = 0;
+  public y = 0;
 
   protected constructor_name: K;
   protected constructor_properties: ConstructorsInnerKeys[K];
 
   protected new_one = true;
+  public collision: Polygon | null = null;
 
   public constructor(constructorName: K) {
     this.constructor_name = constructorName;
@@ -38,7 +43,7 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
     ) as any;
   }
 
-  public update(dt: number): [any[], number] {
+  public update(dt: number, collision_system: System): [any[], number] {
     let changed_bits = 0b0;
     const constructor = constructors_object[this.constructor_name];
 
@@ -54,6 +59,7 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
       });
 
       this.step(dt);
+      this.process_collisions(collision_system);
 
       const changed_props: any[] = [];
       this.constructor_properties.forEach((prop, i) => {
@@ -94,6 +100,15 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
       return [changed_props, changed_bits];
     }
   }
+
+  protected process_collisions(system: System) {
+    if (this.collision == null) return;
+    this.collision.setPosition(this.x, this.y);
+    system.checkOne(this.collision, this.on_collision);
+  }
+
+  //@ts-ignore
+  protected on_collision(response: Response): void {}
 
   //@ts-ignore
   public step(dt: number) {}
