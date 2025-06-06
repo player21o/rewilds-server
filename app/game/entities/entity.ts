@@ -6,7 +6,11 @@ import {
   ConstructorsObject,
 } from "../../common/constructors";
 
-import { Polygon, Response, System } from "detect-collisions";
+import { Circle, Polygon, Response, System } from "detect-collisions";
+
+export type Collision<T extends Entity<any>> = (Polygon | Circle) & {
+  userData: { entity: T };
+};
 
 export class Entity<K extends keyof ConstructorsObject = "Entity"> {
   public sid: number = -1;
@@ -17,7 +21,7 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
   protected constructor_properties: ConstructorsInnerKeys[K];
 
   protected new_one = true;
-  public collision: Polygon | null = null;
+  public collision: Collision<typeof this> | null = null;
 
   public constructor(constructorName: K) {
     this.constructor_name = constructorName;
@@ -103,12 +107,26 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
 
   protected process_collisions(system: System) {
     if (this.collision == null) return;
+
     this.collision.setPosition(this.x, this.y);
-    system.checkOne(this.collision, this.on_collision);
+    system.checkOne(this.collision, this.on_collision.bind(this));
   }
 
   //@ts-ignore
-  protected on_collision(response: Response): void {}
+  protected on_collision(response: Response): void {
+    if (this.collision == null) return;
+
+    const entity_a = (response.a as Collision<any>).userData
+      .entity as Entity<any>;
+    const entity_b = (response.b as Collision<any>).userData
+      .entity as Entity<any>;
+
+    entity_a.x += response.overlapN.x;
+    entity_a.y += response.overlapN.y;
+    entity_b.x += response.overlapV.x;
+    entity_b.y += response.overlapV.y;
+    console.log(response);
+  }
 
   //@ts-ignore
   public step(dt: number) {}

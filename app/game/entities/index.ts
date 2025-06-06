@@ -5,6 +5,7 @@ export class EntitiesManager {
   private sid_map: { [sid: number]: Entity } = {};
   private entities: Entity[] = [];
   private sid_counter = 0;
+  private collision_system = new System();
 
   private on_entity_created_callbacks: ((entity: Entity) => void)[] = [];
 
@@ -12,13 +13,25 @@ export class EntitiesManager {
     this.on_entity_created_callbacks.push(cb);
   }
 
-  public add(e: any, collision_system: System) {
+  public add(e: any) {
     e.sid = this.sid_counter;
     this.sid_counter += 1;
     this.sid_map[e.sid] = e;
     this.entities.push(e);
     this.on_entity_created_callbacks.forEach((cb) => cb(e));
-    if (e.collision != null) collision_system.insert(e.collision);
+    if (e.collision != null) this.collision_system.insert(e.collision);
+  }
+
+  public update(dt: number) {
+    const updates: [sid: number, props: any[], bits: number][] = [];
+
+    this.entities.forEach((entity) => {
+      const [props, bits] = entity.update(dt, this.collision_system);
+
+      if (bits != 0) updates.push([entity.sid, props, bits]);
+    });
+
+    return updates;
   }
 
   public get(sid: number) {

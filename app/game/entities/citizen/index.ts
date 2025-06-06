@@ -1,9 +1,10 @@
+import { Circle } from "detect-collisions";
 import {
   constructors_inner_keys,
   constructors_object,
 } from "../../../common/constructors";
 import { CitizenType } from "../../../common/interfaces";
-import { Entity } from "../entity";
+import { Collision, Entity } from "../entity";
 import { StateManager } from "../state";
 import states from "./states";
 
@@ -27,6 +28,10 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
   public stamina = 10;
 
   public private_data_changes = { bits: 0b0, data: [] as any[] };
+
+  public collision = new Circle({ x: 0, y: 0 }, 15, {
+    userData: { entity: this },
+  }) as Collision<typeof this>;
 
   public constructor(name: string, x: number, y: number) {
     super("Citizen");

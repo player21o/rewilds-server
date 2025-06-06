@@ -135,17 +135,11 @@ export class GameServer {
 
   private game_loop(ticks: number, update_ticks: number) {
     setInterval(() => {
-      const updates: [sid: number, props: any[], bits: number][] = [];
-
       const dt = (Date.now() - this.last_time) / 1000;
 
-      this.entities.forEach((entity) => {
-        const [props, bits] = entity.update(dt);
-
-        if (bits != 0) updates.push([entity.sid, props, bits]);
-      });
-
-      this.entities_updates.push(...updates.map((u) => [u[0], u[2], ...u[1]]));
+      this.entities_updates.push(
+        ...this.entities.update(dt).map((u) => [u[0], u[2], ...u[1]])
+      );
 
       this.last_time = Date.now();
     }, 1000 / ticks);
