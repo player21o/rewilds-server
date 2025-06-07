@@ -51,6 +51,9 @@ export default {
       case "growl_stop":
         citizen.state_manager.set("idle");
         break;
+      case "attack":
+        citizen.state_manager.set("attack");
+        break;
     }
   },
 } as Packets;

@@ -125,6 +125,8 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
     entity_a.y += response.overlapN.y;
     entity_b.x += response.overlapV.x;
     entity_b.y += response.overlapV.y;
+
+    console.log(entity_a.sid + " -> " + entity_b.sid);
   }
 
   //@ts-ignore

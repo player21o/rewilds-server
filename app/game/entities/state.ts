@@ -14,7 +14,14 @@ export class StateManager<T = any> {
   }
 
   public set(state: T) {
-    if (state == this.state) return;
+    if (
+      state == this.state ||
+      (this.state != null &&
+        !this.states[this.state as keyof typeof this.states].flow!.includes(
+          state as string
+        ))
+    )
+      return;
 
     let s = this.states[this.state as keyof typeof this.states];
 
@@ -36,7 +43,8 @@ export class StateManager<T = any> {
 }
 
 export type States<T extends Entity<any> = Entity<"Entity">> = {
-  [name: string]: {
+  [E in string]: {
+    flow?: E[];
     enter?: (entity: T, manager: StateManager) => void;
     leave?: (entity: T, manager: StateManager) => void;
     step?: (dt: number, entity: T, manager: StateManager) => void;

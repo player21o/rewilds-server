@@ -43,16 +43,19 @@ function handle_pointer(entity: Citizen) {
 
 export default {
   idle: {
+    flow: ["growl", "attack"],
     step(dt, entity, _manager) {
       handle_movement(entity, dt, 150);
       handle_pointer(entity);
     },
   },
   growl: {
+    flow: ["idle"],
     step(dt, entity, _manager) {
       handle_movement(entity, dt, 150 * 1.333);
       handle_pointer(entity);
       entity.stamina -= 0.1 * dt;
     },
   },
+  attack: {},
 } as States<Citizen>;
