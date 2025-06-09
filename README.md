@@ -9,7 +9,9 @@ A server for [rewilds](https://github.com/player21o/rewilds).
 1. First, install node.js and npm. Then clone the repository (**recurse-submodules is mandatory**):
    `git clone https://github.com/player21o/rewilds-server.git --recurse-submodules`
 
-2. `cd` into the directory and run:
-   `npx tsx app`
+2. `cd` into the directory and install packages:
+   `npm i`
 
-3. That's it!
+3. Run with `npx tsx app`
+
+4. That's it!

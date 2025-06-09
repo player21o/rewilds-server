@@ -14,9 +14,9 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
   public y: number;
   public direction = 0;
   public health = 10;
-  public team: CitizenType["team"] = 2;
+  public team: CitizenType["team"] = 0;
   public state: CitizenType["state"] = "idle";
-  public gender: CitizenType["gender"] = "male";
+  public gender: CitizenType["gender"] = "female";
 
   public keys = 0;
   public pointerX = 0;

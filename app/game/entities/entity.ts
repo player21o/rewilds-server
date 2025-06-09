@@ -108,7 +108,7 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
   protected process_collisions(system: System) {
     if (this.collision == null) return;
 
-    this.collision.setPosition(this.x, this.y);
+    this.update_collision_pos();
     system.checkOne(this.collision, this.on_collision.bind(this));
   }
 
@@ -123,10 +123,19 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
 
     entity_a.x += response.overlapN.x;
     entity_a.y += response.overlapN.y;
-    entity_b.x += response.overlapV.x;
-    entity_b.y += response.overlapV.y;
+    entity_b.x += response.overlapV.x / 2;
+    entity_b.y += response.overlapV.y / 2;
+
+    entity_a.update_collision_pos();
+    entity_b.update_collision_pos();
 
     console.log(entity_a.sid + " -> " + entity_b.sid);
+  }
+
+  public update_collision_pos() {
+    if (this.collision == null) return;
+
+    this.collision.setPosition(this.x, this.y, false);
   }
 
   //@ts-ignore
