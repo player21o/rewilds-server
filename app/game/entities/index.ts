@@ -1,5 +1,6 @@
 import { System } from "detect-collisions";
 import { Entity } from "./entity";
+import { constructors_object } from "../../common/constructors";
 
 export class EntitiesManager {
   private sid_map: { [sid: number]: Entity } = {};
@@ -23,12 +24,40 @@ export class EntitiesManager {
   }
 
   public update(dt: number) {
+    const before_props: [entity: Entity, props: any[]][] = [];
+
+    this.entities.forEach((entity) =>
+      before_props.push([entity, entity.update(dt, this.collision_system)])
+    );
+
     const updates: [sid: number, props: any[], bits: number][] = [];
 
-    this.entities.forEach((entity) => {
-      const [props, bits] = entity.update(dt, this.collision_system);
+    before_props.forEach(([entity, props]) => {
+      if (entity.new_one) {
+        updates.push([entity.sid, props, 0b0 | (1 << (props.length - 1))]);
+        entity.new_one = false;
+      } else {
+        const changed_props: any[] = [];
+        let changed_bits = 0b0;
+        const constructor = constructors_object[entity.constructor_name];
+        entity.constructor_properties.forEach((prop, i) => {
+          const propName = prop as keyof typeof constructor;
+          const converterPair = constructor[propName] as readonly [
+            (val: any) => any,
+            (val: any) => any
+          ];
 
-      if (bits != 0) updates.push([entity.sid, props, bits]);
+          const formatted = converterPair[0]((entity as any)[prop]);
+
+          if (props[i] !== formatted) {
+            //changed!
+            changed_props.push(formatted);
+            changed_bits |= 1 << i;
+          }
+        });
+
+        updates.push([entity.sid, changed_props, changed_bits]);
+      }
     });
 
     return updates;

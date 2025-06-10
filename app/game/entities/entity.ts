@@ -17,10 +17,10 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
   public x = 0;
   public y = 0;
 
-  protected constructor_name: K;
-  protected constructor_properties: ConstructorsInnerKeys[K];
+  public constructor_name: K;
+  public constructor_properties: ConstructorsInnerKeys[K];
 
-  protected new_one = true;
+  public new_one = true;
   public collision: Collision<typeof this> | null = null;
 
   public constructor(constructorName: K) {
@@ -47,62 +47,23 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
     ) as any;
   }
 
-  public update(dt: number, collision_system: System): [any[], number] {
-    let changed_bits = 0b0;
+  public update(dt: number, s: System) {
     const constructor = constructors_object[this.constructor_name];
 
-    if (!this.new_one) {
-      const prev_props = this.constructor_properties.map((prop) => {
-        const propName = prop as keyof typeof constructor;
-        const converterPair = constructor[propName] as readonly [
-          (val: any) => any,
-          (val: any) => any
-        ];
-
-        return converterPair[0]((this as any)[prop]);
-      });
-
-      this.step(dt);
-      this.process_collisions(collision_system);
-
-      const changed_props: any[] = [];
-      this.constructor_properties.forEach((prop, i) => {
-        const propName = prop as keyof typeof constructor;
-        const converterPair = constructor[propName] as readonly [
-          (val: any) => any,
-          (val: any) => any
-        ];
-
-        const formatted = converterPair[0]((this as any)[prop]);
-
-        if (prev_props[i] !== formatted) {
-          //changed!
-          changed_props.push(formatted);
-          changed_bits |= 1 << i;
-        }
-      });
-
-      return [changed_props, changed_bits];
-    } else {
-      const changed_props: any[] = [
-        constructors_keys.indexOf(this.constructor_name),
+    const updates = this.constructor_properties.map((prop) => {
+      const propName = prop as keyof typeof constructor;
+      const converterPair = constructor[propName] as readonly [
+        (val: any) => any,
+        (val: any) => any
       ];
-      this.constructor_properties.forEach((prop, i) => {
-        const propName = prop as keyof typeof constructor;
-        const converterPair = constructor[propName] as readonly [
-          (val: any) => any,
-          (val: any) => any
-        ];
 
-        const formatted = converterPair[0]((this as any)[prop]);
-        changed_props.push(formatted);
-        changed_bits |= 1 << i;
-      });
+      return converterPair[0]((this as any)[prop]);
+    });
 
-      this.new_one = false;
+    this.step(dt);
+    this.process_collisions(s);
 
-      return [changed_props, changed_bits];
-    }
+    return updates;
   }
 
   protected process_collisions(system: System) {
@@ -110,6 +71,9 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
 
     this.update_collision_pos();
     system.checkOne(this.collision, this.on_collision.bind(this));
+    system.separateBody(this.collision);
+    this.x = this.collision.x;
+    this.y = this.collision.y;
   }
 
   //@ts-ignore
@@ -121,8 +85,8 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
     const entity_b = (response.b as Collision<any>).userData
       .entity as Entity<any>;
 
-    entity_a.x += response.overlapN.x;
-    entity_a.y += response.overlapN.y;
+    entity_a.x += response.overlapN.x / 2;
+    entity_a.y += response.overlapN.y / 2;
     entity_b.x += response.overlapV.x / 2;
     entity_b.y += response.overlapV.y / 2;
 
@@ -135,7 +99,7 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
   public update_collision_pos() {
     if (this.collision == null) return;
 
-    this.collision.setPosition(this.x, this.y, false);
+    this.collision.setPosition(this.x, this.y, true);
   }
 
   //@ts-ignore
