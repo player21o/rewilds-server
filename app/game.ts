@@ -26,6 +26,19 @@ export class GameServer {
   constructor(port: number, tickrate: number, upd_tickrate: number) {
     this.game_loop(tickrate, upd_tickrate);
 
+    /*
+    for (let x = 0; x < 30; x++) {
+      for (let y = 0; y < 30; y++) {
+        const c = new Citizen("pidor", 40 * x, 40 * y);
+        c.gender = ["male", "female"][Math.round(Math.random())] as
+          | "male"
+          | "female";
+        c.team = Math.round(Math.random() * 2);
+        this.entities.add(c);
+      }
+    }
+      */
+
     this.app = App({})
       .ws("/*", {
         compression: DISABLED,
@@ -140,6 +153,7 @@ export class GameServer {
       );
 
       this.last_time = Date.now();
+      //console.log(dt);
     }, 1000 / ticks);
 
     setInterval(() => {

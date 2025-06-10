@@ -56,7 +56,8 @@ export class EntitiesManager {
           }
         });
 
-        updates.push([entity.sid, changed_props, changed_bits]);
+        if (changed_bits != 0b0)
+          updates.push([entity.sid, changed_props, changed_bits]);
       }
     });
 

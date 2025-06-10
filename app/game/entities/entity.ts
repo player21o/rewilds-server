@@ -93,7 +93,7 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
     entity_a.update_collision_pos();
     entity_b.update_collision_pos();
 
-    console.log(entity_a.sid + " -> " + entity_b.sid);
+    //console.log(entity_a.sid + " -> " + entity_b.sid);
   }
 
   public update_collision_pos() {
