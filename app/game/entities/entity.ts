@@ -79,21 +79,6 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
   //@ts-ignore
   protected on_collision(response: Response): void {
     if (this.collision == null) return;
-
-    const entity_a = (response.a as Collision<any>).userData
-      .entity as Entity<any>;
-    const entity_b = (response.b as Collision<any>).userData
-      .entity as Entity<any>;
-
-    entity_a.x += response.overlapN.x / 2;
-    entity_a.y += response.overlapN.y / 2;
-    entity_b.x += response.overlapV.x / 2;
-    entity_b.y += response.overlapV.y / 2;
-
-    entity_a.update_collision_pos();
-    entity_b.update_collision_pos();
-
-    //console.log(entity_a.sid + " -> " + entity_b.sid);
   }
 
   public update_collision_pos() {

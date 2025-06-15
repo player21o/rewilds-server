@@ -30,7 +30,9 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
 
   public private_data_changes = { bits: 0b0, data: [] as any[] };
 
-  public collision = new Circle({ x: 0, y: 0 }, 15, {
+  public moving = false;
+
+  public collision = new Circle({ x: 0, y: 0 }, 14, {
     userData: { entity: this },
   }) as Collision<typeof this>;
 
@@ -94,6 +96,25 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
 
       this.private_data_changes.bits = changed_bits;
       this.private_data_changes.data = changed_props;
+    }
+  }
+
+  protected on_collision(response: SAT.Response): void {
+    if (this.collision == null) return;
+
+    const entity_a = (response.a as Collision<any>).userData
+      .entity as Entity<any>;
+    const entity_b = (response.b as Collision<any>).userData
+      .entity as Entity<any>;
+
+    if (entity_a instanceof Citizen && entity_b instanceof Citizen) {
+      entity_a.x += response.overlapN.x / 2;
+      entity_a.y += response.overlapN.y / 2;
+      entity_b.x += response.overlapV.x / 2;
+      entity_b.y += response.overlapV.y / 2;
+
+      entity_a.update_collision_pos();
+      entity_b.update_collision_pos();
     }
   }
 

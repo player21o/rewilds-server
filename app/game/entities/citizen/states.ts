@@ -28,6 +28,8 @@ function handle_movement(entity: Citizen, dt: number, speed: number) {
     final_vector[1] = final_vector[1] / vec_len;
   }
 
+  entity.moving = final_vector[0] != 0 || final_vector[1] != 0;
+
   entity.x += speed * final_vector[0] * dt;
   entity.y += speed * final_vector[1] * dt;
 }
