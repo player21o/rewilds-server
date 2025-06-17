@@ -49,14 +49,16 @@ export default {
     step(dt, entity, _manager) {
       handle_movement(entity, dt, 150);
       handle_pointer(entity);
+      entity.stamina += 0.5 * dt;
     },
   },
   growl: {
     flow: ["idle"],
     step(dt, entity, _manager) {
+      if (entity.stamina <= 0) entity.state_manager.set("idle");
       handle_movement(entity, dt, 150 * 1.333);
       handle_pointer(entity);
-      entity.stamina -= 0.1 * dt;
+      entity.stamina -= 2 * dt;
     },
   },
   attack: {},

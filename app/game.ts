@@ -163,7 +163,7 @@ export class GameServer {
 
     setInterval(() => {
       this.peers.forEach((p) => {
-        if (p.citizen != null) {
+        if (p.citizen != null && p.citizen.private_data_changes.bits != 0b0) {
           p.send(
             "private",
             p.citizen.private_data_changes.bits,

@@ -45,7 +45,8 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
   }
 
   public step(dt: number) {
-    let changed_bits = this.private_data_changes.bits;
+    let prev_bits = this.private_data_changes.bits;
+    let changed_bits = 0b0;
 
     if (!this.new_one) {
       const prev_props = constructors_inner_keys["CitizenPrivateData"].map(
@@ -72,7 +73,7 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
 
         const formatted = converterPair[0]((this as any)[prop]);
 
-        if (prev_props[i] !== formatted) {
+        if ((prev_bits >> i) % 2 != 0 || prev_props[i] !== formatted) {
           //changed!
           changed_props.push(formatted);
           changed_bits |= 1 << i;
