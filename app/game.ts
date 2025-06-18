@@ -24,7 +24,7 @@ export class GameServer {
   private last_time: number = Date.now();
 
   constructor(port: number, tickrate: number, upd_tickrate: number) {
-    this.game_loop(tickrate, upd_tickrate);
+    this.launch_game_loop(tickrate, upd_tickrate);
 
     /*
     for (let x = 0; x < 40; x++) {
@@ -144,7 +144,23 @@ export class GameServer {
       );
   }
 
-  private game_loop(ticks: number, update_ticks: number) {
+  private game_loop(ticks: number) {
+    const now = Date.now();
+    const dt = (now - this.last_time) / 1000; // dt in seconds
+    this.last_time = now;
+
+    // Your exact same update logic
+    this.entities_updates.push(
+      ...this.entities.update(dt).map((u: any) => [u[0], u[2], ...u[1]])
+    );
+
+    // --- The key change is here ---
+    // Schedule the next execution of the loop
+    const tickLength = 1000 / ticks;
+    setTimeout(() => this.game_loop(ticks), tickLength);
+  }
+
+  private launch_game_loop(ticks: number, update_ticks: number) {
     setInterval(() => {
       const dt = (Date.now() - this.last_time) / 1000;
 
@@ -155,6 +171,10 @@ export class GameServer {
       this.last_time = Date.now();
       //console.log(dt);
     }, 1000 / ticks);
+
+    this.last_time = Date.now();
+
+    this.game_loop(ticks);
 
     setInterval(() => {
       this.broadcast("update", this.entities_updates);
