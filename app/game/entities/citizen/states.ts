@@ -50,7 +50,7 @@ export default {
       handle_movement(entity, dt, 150);
       handle_pointer(entity);
 
-      if (entity.stamina < 1) entity.stamina += 0.5 * dt;
+      if (entity.stamina < 1) entity.stamina += 0.1 * dt;
     },
   },
   growl: {
