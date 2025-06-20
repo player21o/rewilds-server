@@ -14,6 +14,8 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
   public y: number;
   public direction = 0;
   public health = 8;
+  public maxHealth = 8;
+  public weapon: CitizenType["weapon"] = "axe";
   public team: CitizenType["team"] = 0;
   public state: CitizenType["state"] = "idle";
   public gender: CitizenType["gender"] = "female";
@@ -26,7 +28,7 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
     this,
     this.state
   );
-  public stamina = 10;
+  public stamina = 1;
 
   public private_data_changes = { bits: 0b0, data: [] as any[] };
 

@@ -49,7 +49,8 @@ export default {
     step(dt, entity, _manager) {
       handle_movement(entity, dt, 150);
       handle_pointer(entity);
-      entity.stamina += 0.5 * dt;
+
+      if (entity.stamina < 1) entity.stamina += 0.5 * dt;
     },
   },
   growl: {
@@ -58,7 +59,7 @@ export default {
       if (entity.stamina <= 0) entity.state_manager.set("idle");
       handle_movement(entity, dt, 150 * 1.333);
       handle_pointer(entity);
-      entity.stamina -= 2 * dt;
+      entity.stamina -= 0.3 * dt;
     },
   },
   attack: {},
