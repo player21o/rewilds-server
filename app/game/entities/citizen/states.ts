@@ -62,5 +62,10 @@ export default {
       entity.stamina -= 0.3 * dt;
     },
   },
-  attack: {},
+  attack: {
+    step(dt, entity, _manager) {
+      handle_movement(entity, dt, 150 * 1.333);
+      handle_pointer(entity);
+    },
+  },
 } as States<Citizen>;
