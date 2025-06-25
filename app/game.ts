@@ -190,10 +190,6 @@ export class GameServer {
             p.citizen.private_data_changes.bits,
             p.citizen.private_data_changes.data
           );
-          console.log(
-            p.citizen.private_data_changes.bits,
-            p.citizen.private_data_changes.data
-          );
           p.citizen.private_data_changes.bits = 0b0;
           p.citizen.private_data_changes.data = [];
         }
