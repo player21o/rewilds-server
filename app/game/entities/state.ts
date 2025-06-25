@@ -38,6 +38,7 @@ export class StateManager<T = any> {
 
   public step(dt: number) {
     const state = this.states[this.state as keyof typeof this.states];
+    this.duration += dt;
     if (state.step != undefined) state.step(dt, this.entity, this);
   }
 }

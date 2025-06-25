@@ -63,9 +63,12 @@ export default {
     },
   },
   attack: {
-    step(dt, entity, _manager) {
-      handle_movement(entity, dt, 150 * 1.333);
+    flow: ["idle"],
+    step(dt, entity, manager) {
+      handle_movement(entity, dt, 150);
       handle_pointer(entity);
+
+      if (manager.duration >= 0.5) entity.state_manager.set("idle");
     },
   },
 } as States<Citizen>;

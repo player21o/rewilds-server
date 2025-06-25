@@ -14,6 +14,8 @@ export type Peer = {
   id: number;
   ws: Ws;
   citizen: Citizen | null;
+  helloed: boolean;
+  welcomed: boolean;
 };
 
 type Packets = {
@@ -32,8 +34,8 @@ export default {
     citizen.pointerX = pX;
     citizen.pointerY = pY;
   },
-  hello(_) {
-    //console.log("received hello packet from peer " + _.id);
+  hello(peer) {
+    peer.helloed = true;
   },
   keys({ citizen }, keys) {
     if (citizen == null) return;

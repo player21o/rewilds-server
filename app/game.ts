@@ -54,6 +54,8 @@ export class GameServer {
             id: this.peer_id_count,
             ws: ws,
             citizen: null,
+            helloed: false,
+            welcomed: false,
           };
 
           ws.id = peer.id;
@@ -70,11 +72,6 @@ export class GameServer {
           );
           this.entities.add(citizen);
           peer.citizen = citizen;
-
-          setTimeout(() => {
-            peer.send("snapshot", this.entities.snapshot);
-            peer.send("your_sid", citizen.sid);
-          }, 100);
         },
         message: (ws: Ws, msg) => {
           const packet: [packet: number, any[]] = unpack(
@@ -183,14 +180,28 @@ export class GameServer {
 
     setInterval(() => {
       this.peers.forEach((p) => {
-        if (p.citizen != null && p.citizen.private_data_changes.bits != 0b0) {
+        if (
+          p.helloed &&
+          p.citizen != null &&
+          p.citizen.private_data_changes.bits != 0b0
+        ) {
           p.send(
             "private",
             p.citizen.private_data_changes.bits,
             p.citizen.private_data_changes.data
           );
+          console.log(
+            p.citizen.private_data_changes.bits,
+            p.citizen.private_data_changes.data
+          );
           p.citizen.private_data_changes.bits = 0b0;
           p.citizen.private_data_changes.data = [];
+        }
+
+        if (p.helloed && !p.welcomed) {
+          p.welcomed = true;
+          p.send("snapshot", this.entities.snapshot);
+          if (p.citizen != null) p.send("your_sid", p.citizen.sid);
         }
       });
     }, 1000 / 5);
