@@ -45,14 +45,20 @@ function handle_pointer(entity: Citizen) {
 
 export default {
   idle: {
-    flow: ["growl", "attack"],
+    flow: ["attack"],
     step(dt, entity, _manager) {
-      handle_movement(entity, dt, 150);
+      if (entity.stamina <= 0) entity.growling = false;
+      handle_movement(entity, dt, entity.growling ? 150 * 1.333 : 150);
       handle_pointer(entity);
 
-      if (entity.stamina < 1) entity.stamina += 0.1 * dt;
+      if (entity.growling) {
+        entity.stamina -= 0.3 * dt;
+      } else if (entity.stamina < 1) {
+        entity.stamina += 0.1 * dt;
+      }
     },
   },
+  /*
   growl: {
     flow: ["idle"],
     step(dt, entity, _manager) {
@@ -61,7 +67,9 @@ export default {
       handle_pointer(entity);
       entity.stamina -= 0.3 * dt;
     },
+    
   },
+  */
   attack: {
     flow: ["idle"],
     step(dt, entity, manager) {
