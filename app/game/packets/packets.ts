@@ -48,13 +48,14 @@ export default {
 
     switch (action) {
       case "growl_start":
-        citizen.set("growling", true);
+        citizen.set("growling", true); //we use this function because we need to change a value of entity outside the game loop
         break;
       case "growl_stop":
         citizen.set("growling", false);
         break;
       case "attack":
         citizen.state_manager.set("attack");
+        console.log("attack!");
         break;
     }
   },

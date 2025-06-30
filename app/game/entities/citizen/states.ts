@@ -73,7 +73,7 @@ export default {
   attack: {
     flow: ["idle"],
     step(dt, entity, manager) {
-      handle_movement(entity, dt, 150);
+      handle_movement(entity, dt, entity.growling ? 150 * 1.333 : 150);
       handle_pointer(entity);
 
       if (manager.duration >= 0.5) entity.state_manager.set("idle");

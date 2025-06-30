@@ -64,6 +64,7 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
 
     Object.keys(this.to_set).forEach((key) => {
       this[key as keyof this] = this.to_set[key];
+      delete this.to_set[key];
     });
 
     this.step(dt);
@@ -95,6 +96,10 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
 
   //@ts-ignore
   public step(dt: number) {}
+
+  /**
+   * a function to set some value inside entity *outside* update loop (e. g. as an answer to packet)
+   */
 
   public set<T extends keyof typeof this>(key: T, value: (typeof this)[T]) {
     this.to_set[key as any] = value;
