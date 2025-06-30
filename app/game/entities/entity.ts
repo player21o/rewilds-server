@@ -17,6 +17,8 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
   public x = 0;
   public y = 0;
 
+  private to_set: { [key: string]: any } = {};
+
   public constructor_name: K;
   public constructor_properties: ConstructorsInnerKeys[K];
 
@@ -60,6 +62,10 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
       return converterPair[0]((this as any)[prop]);
     });
 
+    Object.keys(this.to_set).forEach((key) => {
+      this[key as keyof this] = this.to_set[key];
+    });
+
     this.step(dt);
     this.process_collisions(s);
 
@@ -89,4 +95,8 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
 
   //@ts-ignore
   public step(dt: number) {}
+
+  public set<T extends keyof typeof this>(key: T, value: (typeof this)[T]) {
+    this.to_set[key as any] = value;
+  }
 }

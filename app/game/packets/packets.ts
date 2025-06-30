@@ -48,10 +48,10 @@ export default {
 
     switch (action) {
       case "growl_start":
-        citizen.growling = true;
+        citizen.set("growling", true);
         break;
       case "growl_stop":
-        citizen.growling = false;
+        citizen.set("growling", false);
         break;
       case "attack":
         citizen.state_manager.set("attack");
