@@ -66,6 +66,7 @@ export class GameServer {
           this.peer_id_count += 1;
 
           const citizen = new Citizen(
+            "hero",
             "hui",
             Math.random() * 50,
             Math.random() * 50

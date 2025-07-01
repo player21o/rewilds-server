@@ -52,7 +52,7 @@ export default {
       handle_pointer(entity);
 
       if (entity.growling) {
-        entity.stamina -= 0.3 * dt;
+        entity.stamina -= entity.data.staminaUsage * dt;
       } else if (entity.stamina < 1) {
         entity.stamina += 0.1 * dt;
       }

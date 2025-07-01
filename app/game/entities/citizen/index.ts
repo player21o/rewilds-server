@@ -7,20 +7,25 @@ import { CitizenType } from "../../../common/interfaces";
 import { Collision, Entity } from "../entity";
 import { StateManager } from "../state";
 import states from "./states";
+import constants from "../../../common/constants";
 
 export class Citizen extends Entity<"Citizen"> implements CitizenType {
   public name: string;
   public x: number;
   public y: number;
   public direction = 0;
-  public health = 8;
-  public maxHealth = 8;
-  public weapon: CitizenType["weapon"] = "axe";
-  public shield: CitizenType["shield"] = "shield_wooden";
+  public health;
+  public maxHealth;
+  public weapon: CitizenType["weapon"];
+  public shield: CitizenType["shield"];
   public team: CitizenType["team"] = 0;
   public state: CitizenType["state"] = "idle";
   public gender: CitizenType["gender"] = "female";
+  public type: CitizenType["type"];
   public growling = false;
+  public maxArmor: number;
+
+  public data;
 
   public keys = 0;
   public pointerX = 0;
@@ -40,12 +45,31 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
     userData: { entity: this },
   }) as Collision<typeof this>;
 
-  public constructor(name: string, x: number, y: number) {
+  public constructor(
+    type: CitizenType["type"],
+    name: string,
+    x: number,
+    y: number
+  ) {
     super("Citizen");
+
+    this.type = type;
+
+    const data = {
+      ...constants.minions["default"],
+      ...constants.minions[type],
+    };
+
+    this.weapon = data.weapon;
+    this.shield = data.shield;
+    this.maxHealth = data.maxHealth;
+    this.maxArmor = data.maxArmor;
+    this.health = this.maxHealth;
 
     this.name = name;
     this.x = x;
     this.y = y;
+    this.data = data;
   }
 
   public step(dt: number) {
