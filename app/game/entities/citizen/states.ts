@@ -48,10 +48,14 @@ export default {
     flow: ["attack"],
     step(dt, entity, _manager) {
       if (entity.stamina <= 0) entity.growling = false;
-      handle_movement(entity, dt, entity.growling ? 150 * 1.333 : 150);
+      handle_movement(
+        entity,
+        dt,
+        entity.growling ? entity.data.speed * 1.333 : entity.data.speed
+      );
       handle_pointer(entity);
 
-      if (entity.growling) {
+      if (entity.growling && entity.moving) {
         entity.stamina -= entity.data.staminaUsage * dt;
       } else if (entity.stamina < 1) {
         entity.stamina += 0.1 * dt;
@@ -73,7 +77,11 @@ export default {
   attack: {
     flow: ["idle"],
     step(dt, entity, manager) {
-      handle_movement(entity, dt, entity.growling ? 150 * 1.333 : 150);
+      handle_movement(
+        entity,
+        dt,
+        entity.growling ? entity.data.speed * 1.333 : entity.data.speed
+      );
       handle_pointer(entity);
 
       if (manager.duration >= 0.5) entity.state_manager.set("idle");

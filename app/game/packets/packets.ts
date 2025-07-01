@@ -55,7 +55,6 @@ export default {
         break;
       case "attack":
         citizen.state_manager.set("attack");
-        console.log("attack!");
         break;
     }
   },
