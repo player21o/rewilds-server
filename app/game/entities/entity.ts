@@ -52,15 +52,17 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
   public update(dt: number, s: System) {
     const constructor = constructors_object[this.constructor_name];
 
-    const updates = this.constructor_properties.map((prop) => {
-      const propName = prop as keyof typeof constructor;
-      const converterPair = constructor[propName] as readonly [
-        (val: any) => any,
-        (val: any) => any
-      ];
+    const updates = !this.new_one
+      ? this.constructor_properties.map((prop) => {
+          const propName = prop as keyof typeof constructor;
+          const converterPair = constructor[propName] as readonly [
+            (val: any) => any,
+            (val: any) => any
+          ];
 
-      return converterPair[0]((this as any)[prop]);
-    });
+          return converterPair[0]((this as any)[prop]);
+        })
+      : this.snapshot();
 
     Object.keys(this.to_set).forEach((key) => {
       this[key as keyof this] = this.to_set[key];

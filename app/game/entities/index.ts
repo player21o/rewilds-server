@@ -34,7 +34,13 @@ export class EntitiesManager {
 
     before_props.forEach(([entity, props]) => {
       if (entity.new_one) {
-        updates.push([entity.sid, props, 0b0 | (1 << (props.length - 1))]);
+        let bits = 0b0;
+
+        for (let i = 0; i < props.length - 1; i++) {
+          bits |= 1 << i;
+        }
+
+        updates.push([entity.sid, props, bits]);
         entity.new_one = false;
       } else {
         const changed_props: any[] = [];
