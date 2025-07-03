@@ -80,9 +80,9 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
 
     this.update_collision_pos();
     system.checkOne(this.collision, this.on_collision.bind(this));
-    system.separateBody(this.collision);
-    this.x = this.collision.x;
-    this.y = this.collision.y;
+    //system.separateBody(this.collision);
+    //this.x = this.collision.x;
+    //this.y = this.collision.y;
   }
 
   //@ts-ignore

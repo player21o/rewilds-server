@@ -67,6 +67,8 @@ export class EntitiesManager {
       }
     });
 
+    this.collision_system.separate();
+
     return updates;
   }
 
