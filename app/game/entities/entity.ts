@@ -5,12 +5,14 @@ import {
   ConstructorsInnerKeys,
   ConstructorsObject,
 } from "../../common/constructors";
+import type { CollisionObject } from "./collisions";
+import type { CollisionResponse, Collisions } from "./collisions";
 
-import { Circle, Polygon, Response, System } from "detect-collisions";
-
+/*
 export type Collision<T extends Entity<any>> = (Polygon | Circle) & {
   userData: { entity: T };
 };
+*/
 
 export class Entity<K extends keyof ConstructorsObject = "Entity"> {
   public sid: number = -1;
@@ -23,7 +25,7 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
   public constructor_properties: ConstructorsInnerKeys[K];
 
   public new_one = true;
-  public collision: Collision<typeof this> | null = null;
+  public collision: CollisionObject | null = null;
 
   public constructor(constructorName: K) {
     this.constructor_name = constructorName;
@@ -49,7 +51,7 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
     ) as any;
   }
 
-  public update(dt: number, s: System) {
+  public update(dt: number, c: Collisions) {
     const constructor = constructors_object[this.constructor_name];
 
     const updates = !this.new_one
@@ -70,11 +72,12 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
     });
 
     this.step(dt);
-    this.process_collisions(s);
+    this.update_collision_pos(c);
 
     return updates;
   }
 
+  /*
   protected process_collisions(system: System) {
     if (this.collision == null) return;
 
@@ -84,16 +87,19 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
     //this.x = this.collision.x;
     //this.y = this.collision.y;
   }
+    */
 
   //@ts-ignore
-  protected on_collision(response: Response): void {
+  public on_collision(response: CollisionResponse, c: Collisions): void {
     if (this.collision == null) return;
   }
 
-  public update_collision_pos() {
+  public update_collision_pos(c: Collisions) {
     if (this.collision == null) return;
 
-    this.collision.setPosition(this.x, this.y, true);
+    this.collision.x = this.x;
+    this.collision.y = this.y;
+    this.collision.update(c);
   }
 
   //@ts-ignore

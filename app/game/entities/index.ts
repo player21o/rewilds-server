@@ -1,12 +1,12 @@
-import { System } from "detect-collisions";
 import { Entity } from "./entity";
 import { constructors_object } from "../../common/constructors";
+import { Collisions } from "./collisions";
 
 export class EntitiesManager {
   private sid_map: { [sid: number]: Entity } = {};
   private entities: Entity[] = [];
   private sid_counter = 0;
-  private collision_system = new System();
+  private collision_system = new Collisions(3000, 3000);
 
   private on_entity_created_callbacks: ((entity: Entity) => void)[] = [];
 
@@ -29,6 +29,16 @@ export class EntitiesManager {
     this.entities.forEach((entity) =>
       before_props.push([entity, entity.update(dt, this.collision_system)])
     );
+
+    this.collision_system.check().forEach((cols) => {
+      this.sid_map[cols[0]].on_collision(
+        {
+          a: this.sid_map[cols[0]],
+          b: this.sid_map[cols[1]],
+        },
+        this.collision_system
+      );
+    });
 
     const updates: [sid: number, props: any[], bits: number][] = [];
 
@@ -66,8 +76,6 @@ export class EntitiesManager {
           updates.push([entity.sid, changed_props, changed_bits]);
       }
     });
-
-    this.collision_system.separate();
 
     return updates;
   }

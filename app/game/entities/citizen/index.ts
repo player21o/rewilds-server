@@ -1,13 +1,14 @@
-import { Circle } from "detect-collisions";
 import {
   constructors_inner_keys,
   constructors_object,
 } from "../../../common/constructors";
 import { CitizenType } from "../../../common/interfaces";
-import { Collision, Entity } from "../entity";
+import { Entity } from "../entity";
 import { StateManager } from "../state";
 import states from "./states";
 import constants from "../../../common/constants";
+import { Box } from "../collisions";
+import type { CollisionResponse, Collisions } from "../collisions";
 
 export class Citizen extends Entity<"Citizen"> implements CitizenType {
   public name: string;
@@ -41,9 +42,12 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
 
   public moving = false;
 
+  /*
   public collision = new Circle({ x: 0, y: 0 }, 14, {
     userData: { entity: this },
   }) as Collision<typeof this>;
+   */
+  public collision = new Box(this.sid, this.x, this.y, 10, 10);
 
   public constructor(
     type: CitizenType["type"],
@@ -128,22 +132,14 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
     }
   }
 
-  protected on_collision(response: SAT.Response): void {
+  public on_collision(response: CollisionResponse, c: Collisions): void {
     if (this.collision == null) return;
 
-    const entity_a = (response.a as Collision<any>).userData
-      .entity as Entity<any>;
-    const entity_b = (response.b as Collision<any>).userData
-      .entity as Entity<any>;
+    const entity_a = response.a;
+    const entity_b = response.b;
 
     if (entity_a instanceof Citizen && entity_b instanceof Citizen) {
-      entity_a.x += response.overlapN.x / 2;
-      entity_a.y += response.overlapN.y / 2;
-      entity_b.x += response.overlapV.x / 2;
-      entity_b.y += response.overlapV.y / 2;
-
-      entity_a.update_collision_pos();
-      entity_b.update_collision_pos();
+      console.log("wow!");
     }
   }
 

@@ -1,3 +1,7 @@
+import type { Entity } from "./entity";
+
+export type CollisionResponse = { a: Entity; b: Entity };
+
 export class Collisions {
   public cell_size = 16;
   public cells: Set<number>[][] = [];
@@ -58,12 +62,16 @@ export class Collisions {
   }
 }
 
-class CollisionObject {
+export class CollisionObject {
   public id: number;
+  public x: number;
+  public y: number;
   private cells: Set<Set<number>> = new Set();
 
-  constructor(id: number) {
+  constructor(id: number, x: number, y: number) {
     this.id = id;
+    this.x = x;
+    this.y = y;
   }
 
   protected set_cell(c: Collisions, x: number, y: number) {
@@ -81,16 +89,12 @@ class CollisionObject {
 }
 
 export class Box extends CollisionObject {
-  private x: number;
-  private y: number;
   private width: number;
   private height: number;
 
   constructor(id: number, x: number, y: number, width: number, height: number) {
-    super(id);
+    super(id, x, y);
 
-    this.x = x;
-    this.y = y;
     this.width = width;
     this.height = height;
   }
