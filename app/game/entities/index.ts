@@ -1,12 +1,13 @@
 import { Entity } from "./entity";
 import { constructors_object } from "../../common/constructors";
-import { Collisions } from "./collisions";
+import { Box, build_collision_response, Collisions } from "./collisions";
+import { lookAt } from "../utils";
 
 export class EntitiesManager {
   private sid_map: { [sid: number]: Entity } = {};
   private entities: Entity[] = [];
   private sid_counter = 0;
-  private collision_system = new Collisions(3000, 3000);
+  private collision_system = new Collisions(5000, 5000);
 
   private on_entity_created_callbacks: ((entity: Entity) => void)[] = [];
 
@@ -14,13 +15,16 @@ export class EntitiesManager {
     this.on_entity_created_callbacks.push(cb);
   }
 
-  public add(e: any) {
+  public add(e: Entity<any>) {
     e.sid = this.sid_counter;
     this.sid_counter += 1;
     this.sid_map[e.sid] = e;
     this.entities.push(e);
     this.on_entity_created_callbacks.forEach((cb) => cb(e));
-    if (e.collision != null) this.collision_system.insert(e.collision);
+    if (e.collision != null) {
+      e.collision.id = e.sid;
+      this.collision_system.insert(e.collision);
+    }
   }
 
   public update(dt: number) {
@@ -31,13 +35,12 @@ export class EntitiesManager {
     );
 
     this.collision_system.check().forEach((cols) => {
-      this.sid_map[cols[0]].on_collision(
-        {
-          a: this.sid_map[cols[0]],
-          b: this.sid_map[cols[1]],
-        },
-        this.collision_system
+      const resp = build_collision_response(
+        this.sid_map[cols[0]],
+        this.sid_map[cols[1]]
       );
+      if (resp != null)
+        this.sid_map[cols[0]].on_collision(resp, this.collision_system);
     });
 
     const updates: [sid: number, props: any[], bits: number][] = [];

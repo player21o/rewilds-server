@@ -68,8 +68,8 @@ export class GameServer {
           const citizen = new Citizen(
             "hero",
             "hui",
-            Math.random() * 50,
-            Math.random() * 50
+            Math.random() * 50 + 100,
+            Math.random() * 50 + 100
           );
           this.entities.add(citizen);
           peer.citizen = citizen;

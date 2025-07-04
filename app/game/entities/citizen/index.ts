@@ -47,7 +47,7 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
     userData: { entity: this },
   }) as Collision<typeof this>;
    */
-  public collision = new Box(this.sid, this.x, this.y, 10, 10);
+  public collision: Box;
 
   public constructor(
     type: CitizenType["type"],
@@ -74,6 +74,8 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
     this.x = x;
     this.y = y;
     this.data = data;
+
+    this.collision = new Box(this.sid, this.x, this.y, 14, 14);
   }
 
   public step(dt: number) {
@@ -139,7 +141,14 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
     const entity_b = response.b;
 
     if (entity_a instanceof Citizen && entity_b instanceof Citizen) {
-      console.log("wow!");
+      entity_a.x += response.vector_a[0];
+      entity_a.y += response.vector_a[1];
+
+      entity_b.x += response.vector_b[0];
+      entity_b.y += response.vector_b[1];
+
+      entity_a.update_collision_pos(c);
+      entity_b.update_collision_pos(c);
     }
   }
 

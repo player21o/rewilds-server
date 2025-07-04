@@ -1,12 +1,17 @@
 import type { Entity } from "./entity";
 
-export type CollisionResponse = { a: Entity; b: Entity };
+export type CollisionResponse = {
+  a: Entity;
+  b: Entity;
+  vector_a: [number, number];
+  vector_b: [number, number];
+};
 
 export class Collisions {
-  public cell_size = 16;
+  public cell_size = 8;
   public cells: Set<number>[][] = [];
   private non_empty_cells: Set<Set<number>> = new Set();
-  private objects: { [id: number]: CollisionObject } = {};
+  public objects: { [id: number]: CollisionObject } = {};
 
   constructor(width: number, height: number) {
     for (let x = 0; x < Math.ceil(width / this.cell_size) + 1; x++) {
@@ -19,6 +24,7 @@ export class Collisions {
   }
 
   public set_cell(x: number, y: number, id: number) {
+    if (!(x in this.cells)) console.log(x, this.cells.length);
     this.cells[x][y].add(id);
     this.non_empty_cells.add(this.cells[x][y]);
 
@@ -84,13 +90,61 @@ export class CollisionObject {
   }
   public update(c: Collisions) {
     this.clear(c);
-    this.update(c);
+    this.build(c);
   }
 }
 
+export function build_collision_response(
+  a: Entity<any>,
+  b: Entity<any>
+): CollisionResponse | null {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+
+  const a_obj = a.collision as Box;
+  const b_obj = b.collision as Box;
+
+  const combinedHalfWidths = a_obj.width / 2 + b_obj.width / 2;
+  const combinedHalfHeights = a_obj.height / 2 + b_obj.height / 2;
+
+  const overlapX = combinedHalfWidths - Math.abs(dx);
+  const overlapY = combinedHalfHeights - Math.abs(dy);
+
+  if (overlapX <= 0 || overlapY <= 0) {
+    return null;
+  }
+
+  let vector_a: [number, number] = [0, 0];
+  let vector_b: [number, number] = [0, 0];
+
+  if (overlapX < overlapY) {
+    const push = overlapX / 2;
+
+    if (dx > 0) {
+      vector_a[0] = -push;
+      vector_b[0] = push;
+    } else {
+      vector_a[0] = push;
+      vector_b[0] = -push;
+    }
+  } else {
+    const push = overlapY / 2;
+
+    if (dy > 0) {
+      vector_a[1] = -push;
+      vector_b[1] = push;
+    } else {
+      vector_a[1] = push;
+      vector_b[1] = -push;
+    }
+  }
+
+  return { a, b, vector_a, vector_b };
+}
+
 export class Box extends CollisionObject {
-  private width: number;
-  private height: number;
+  public width: number;
+  public height: number;
 
   constructor(id: number, x: number, y: number, width: number, height: number) {
     super(id, x, y);
@@ -129,6 +183,8 @@ export class Box extends CollisionObject {
         y < right_down_corner_cells[1] + 1;
         y++
       ) {
+        if (x > c.cells.length)
+          console.log(x, left_up_corner_cells, right_down_corner_cells);
         this.set_cell(c, x, y);
       }
     }
