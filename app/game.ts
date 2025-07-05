@@ -29,7 +29,7 @@ export class GameServer {
     /*
     for (let x = 0; x < 40; x++) {
       for (let y = 0; y < 40; y++) {
-        const c = new Citizen("pidor", 40 * x, 40 * y);
+        const c = new Citizen("hero", "pidor", 20 * x + 100, 20 * y + 100);
         c.gender = ["male", "female"][Math.round(Math.random())] as
           | "male"
           | "female";

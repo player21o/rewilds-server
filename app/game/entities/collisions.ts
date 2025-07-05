@@ -60,7 +60,16 @@ export class Collisions {
 
     this.non_empty_cells.forEach((cell) => {
       if (cell.size >= 2) {
-        collisions.push(Array.from(cell));
+        let pending: number[] = [];
+
+        cell.forEach((val) => {
+          pending.push(val);
+
+          if (pending.length >= 2) {
+            collisions.push([...pending]);
+            pending.shift();
+          }
+        });
       }
     });
 
