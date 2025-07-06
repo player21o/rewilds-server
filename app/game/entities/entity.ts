@@ -90,7 +90,16 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
     */
 
   //@ts-ignore
-  public on_collision(response: CollisionResponse, c: Collisions): void {
+  public on_collision(
+    //@ts-ignore
+    response: CollisionResponse,
+    //@ts-ignore
+    c: Collisions,
+    //@ts-ignore
+    entity_a: Entity<any>,
+    //@ts-ignore
+    entity_b: Entity<any>
+  ): void {
     if (this.collision == null) return;
   }
 
@@ -99,6 +108,7 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
 
     this.collision.x = this.x;
     this.collision.y = this.y;
+
     this.collision.update(c);
   }
 

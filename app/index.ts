@@ -8,3 +8,5 @@ const game = new GameServer(
   config.game.tickrate,
   config.game.updates_tickrate
 );
+
+console.log("started!");

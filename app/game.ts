@@ -26,10 +26,9 @@ export class GameServer {
   constructor(port: number, tickrate: number, upd_tickrate: number) {
     this.launch_game_loop(tickrate, upd_tickrate);
 
-    /*
     for (let x = 0; x < 40; x++) {
       for (let y = 0; y < 40; y++) {
-        const c = new Citizen("hero", "pidor", 20 * x + 100, 20 * y + 100);
+        const c = new Citizen("hero", "pidor", 30 * x + 100, 30 * y + 100);
         c.gender = ["male", "female"][Math.round(Math.random())] as
           | "male"
           | "female";
@@ -37,7 +36,6 @@ export class GameServer {
         this.entities.add(c);
       }
     }
-      */
 
     this.app = App({})
       .ws("/*", {

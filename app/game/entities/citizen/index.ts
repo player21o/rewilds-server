@@ -7,7 +7,7 @@ import { Entity } from "../entity";
 import { StateManager } from "../state";
 import states from "./states";
 import constants from "../../../common/constants";
-import { Box } from "../collisions";
+import { Box, Circle } from "../collisions";
 import type { CollisionResponse, Collisions } from "../collisions";
 
 export class Citizen extends Entity<"Citizen"> implements CitizenType {
@@ -42,12 +42,7 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
 
   public moving = false;
 
-  /*
-  public collision = new Circle({ x: 0, y: 0 }, 14, {
-    userData: { entity: this },
-  }) as Collision<typeof this>;
-   */
-  public collision: Box;
+  public collision;
 
   public constructor(
     type: CitizenType["type"],
@@ -75,7 +70,7 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
     this.y = y;
     this.data = data;
 
-    this.collision = new Box(this.sid, this.x, this.y, 14, 14);
+    this.collision = new Circle(this.sid, this.x, this.y, 12);
   }
 
   public step(dt: number) {
@@ -134,11 +129,13 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
     }
   }
 
-  public on_collision(response: CollisionResponse, c: Collisions): void {
+  public on_collision(
+    response: CollisionResponse,
+    c: Collisions,
+    entity_a: Entity<any>,
+    entity_b: Entity<any>
+  ): void {
     if (this.collision == null) return;
-
-    const entity_a = response.a;
-    const entity_b = response.b;
 
     if (entity_a instanceof Citizen && entity_b instanceof Citizen) {
       entity_a.x += response.vector_a[0];
