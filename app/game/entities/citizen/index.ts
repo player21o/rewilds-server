@@ -70,7 +70,7 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
     this.y = y;
     this.data = data;
 
-    this.collision = new Circle(this.sid, this.x, this.y, 12);
+    this.collision = new Circle(this.sid, this.x, this.y, 12, 0.6);
   }
 
   public step(dt: number) {

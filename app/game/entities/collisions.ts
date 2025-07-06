@@ -154,6 +154,8 @@ export function box_to_box_collision(a: Box, b: Box): CollisionResponse | null {
   return { a, b, vector_a, vector_b };
 }
 
+/*
+
 function circle_to_circle_collision(
   c1: Circle,
   c2: Circle
@@ -187,12 +189,12 @@ function circle_to_circle_collision(
   const pushX = (dx / distance) * overlap;
   const pushY = (dy / distance) * overlap;
 
-  /*
+  //
   return {
     resolution1: { x: -pushX / 2, y: -pushY / 2 },
     resolution2: { x: pushX / 2, y: pushY / 2 },
   };
-  */
+  //
 
   return {
     a: c1,
@@ -201,7 +203,198 @@ function circle_to_circle_collision(
     vector_b: [pushX / 2, pushY / 2],
   };
 }
+*/
 
+// Alternative, potentially simpler implementation
+function circle_to_circle_collision(
+  c1: Circle,
+  c2: Circle
+): CollisionResponse | null {
+  const dx = c2.x - c1.x;
+  const dy = c2.y - c1.y;
+
+  const c1_rx = c1.radiusX;
+  const c1_ry = c1.radiusY;
+  const c2_rx = c2.radiusX;
+  const c2_ry = c2.radiusY;
+
+  const sumRX = c1_rx + c2_rx;
+  const sumRY = c1_ry + c2_ry;
+
+  if (sumRX === 0 || sumRY === 0) return null;
+
+  const transformedDx = dx / sumRX;
+  const transformedDy = dy / sumRY;
+
+  const distanceSq =
+    transformedDx * transformedDx + transformedDy * transformedDy;
+
+  if (distanceSq >= 1) {
+    return null;
+  }
+
+  if (distanceSq === 0) {
+    return {
+      a: c1,
+      b: c2,
+      vector_a: [-sumRX / 2, 0],
+      vector_b: [sumRX / 2, 0],
+    };
+  }
+
+  const distance = Math.sqrt(distanceSq);
+
+  const overlap = 1.0 - distance;
+
+  const pushX_t = (transformedDx / distance) * overlap;
+  const pushY_t = (transformedDy / distance) * overlap;
+
+  const pushX = pushX_t * sumRX;
+  const pushY = pushY_t * sumRY;
+
+  return {
+    a: c1,
+    b: c2,
+    vector_a: [-pushX / 2, -pushY / 2], // c1 gets pushed away from c2
+    vector_b: [pushX / 2, pushY / 2], // c2 gets pushed away from c1
+  };
+}
+
+function box_to_circle_collision(
+  rect: Box,
+  circle: Circle
+): CollisionResponse | null {
+  if (circle.squeezeY === 1.0) {
+    const rectHalfWidth = rect.width / 2;
+    const rectHalfHeight = rect.height / 2;
+
+    const closestX = Math.max(
+      rect.x - rectHalfWidth,
+      Math.min(circle.x, rect.x + rectHalfWidth)
+    );
+    const closestY = Math.max(
+      rect.y - rectHalfHeight,
+      Math.min(circle.y, rect.y + rectHalfHeight)
+    );
+
+    const dx = circle.x - closestX;
+    const dy = circle.y - closestY;
+
+    const distanceSq = dx * dx + dy * dy;
+
+    if (distanceSq >= circle.radius * circle.radius) {
+      return null;
+    }
+
+    const distance = Math.sqrt(distanceSq);
+    const overlap = circle.radius - distance;
+
+    if (distance === 0) {
+      const overlapX =
+        rectHalfWidth + circle.radius - Math.abs(circle.x - rect.x);
+      const overlapY =
+        rectHalfHeight + circle.radius - Math.abs(circle.y - rect.y);
+
+      if (overlapX < overlapY) {
+        const push = circle.x > rect.x ? overlapX : -overlapX;
+
+        return {
+          a: rect,
+          b: circle,
+          vector_a: [-push / 2, 0],
+          vector_b: [push / 2, 0],
+        };
+      } else {
+        const push = circle.y > rect.y ? overlapY : -overlapY;
+        return {
+          a: rect,
+          b: circle,
+          vector_a: [0, -push / 2],
+          vector_b: [0, push / 2],
+        };
+      }
+    }
+
+    const pushX = (dx / distance) * overlap;
+    const pushY = (dy / distance) * overlap;
+
+    return {
+      a: rect,
+      b: circle,
+      vector_a: [-pushX / 2, -pushY / 2],
+      vector_b: [pushX / 2, pushY / 2],
+    };
+  }
+
+  const scaleY = 1 / circle.squeezeY;
+
+  const rectCenterY_t = rect.y * scaleY;
+  const circleCenterY_t = circle.y * scaleY;
+
+  const rectHalfHeight_t = (rect.height / 2) * scaleY;
+
+  const circleRadius_t = circle.radiusX;
+
+  const closestX = Math.max(
+    rect.x - rect.width / 2,
+    Math.min(circle.x, rect.x + rect.width / 2)
+  );
+  const closestY_t = Math.max(
+    rectCenterY_t - rectHalfHeight_t,
+    Math.min(circleCenterY_t, rectCenterY_t + rectHalfHeight_t)
+  );
+
+  const dx = circle.x - closestX;
+  const dy_t = circleCenterY_t - closestY_t;
+  const distanceSq_t = dx * dx + dy_t * dy_t;
+
+  if (distanceSq_t >= circleRadius_t * circleRadius_t) {
+    return null;
+  }
+
+  const distance_t = Math.sqrt(distanceSq_t);
+  const overlap_t = circleRadius_t - distance_t;
+
+  if (distance_t === 0) {
+    const overlapX =
+      rect.width / 2 + circle.radiusX - Math.abs(circle.x - rect.x);
+    const overlapY =
+      rect.height / 2 + circle.radiusY - Math.abs(circle.y - rect.y);
+
+    if (overlapX < overlapY) {
+      const push = circle.x > rect.x ? overlapX : -overlapX;
+      return {
+        a: rect,
+        b: circle,
+        vector_a: [-push / 2, 0],
+        vector_b: [push / 2, 0],
+      };
+    } else {
+      const push = circle.y > rect.y ? overlapY : -overlapY;
+      return {
+        a: rect,
+        b: circle,
+        vector_a: [0, -push / 2],
+        vector_b: [0, push / 2],
+      };
+    }
+  }
+
+  const pushX_t = (dx / distance_t) * overlap_t;
+  const pushY_t = (dy_t / distance_t) * overlap_t;
+
+  const pushX = pushX_t;
+  const pushY = pushY_t / scaleY;
+
+  return {
+    a: rect,
+    b: circle,
+    vector_a: [-pushX / 2, -pushY / 2],
+    vector_b: [pushX / 2, pushY / 2],
+  };
+}
+
+/*
 function box_to_circle_collision(
   rect: Box,
   circle: Circle
@@ -280,6 +473,7 @@ function box_to_circle_collision(
     vector_b: [pushX / 2, pushY / 2],
   };
 }
+  */
 
 export function build_collision_response(
   a: CollisionObject,
@@ -360,11 +554,13 @@ export class Box extends CollisionObject {
 export class Circle extends CollisionObject {
   public radius: number;
   public type = "circle";
+  public squeezeY: number;
 
-  constructor(id: number, x: number, y: number, radius: number) {
+  constructor(id: number, x: number, y: number, radius: number, squeezeY = 1) {
     super(id, x, y);
 
     this.radius = radius;
+    this.squeezeY = squeezeY;
   }
 
   public build(c: Collisions): void {
@@ -397,5 +593,13 @@ export class Circle extends CollisionObject {
         this.set_cell(c, x, y);
       }
     }
+  }
+
+  get radiusX(): number {
+    return this.radius;
+  }
+
+  get radiusY(): number {
+    return this.radius * this.squeezeY;
   }
 }
