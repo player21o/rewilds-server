@@ -1,4 +1,5 @@
 import type { Citizen } from ".";
+import constants from "../../../common/constants";
 import { lookAt } from "../../utils";
 import { States } from "../state";
 
@@ -84,7 +85,8 @@ export default {
       );
       handle_pointer(entity);
 
-      if (manager.duration >= 0.5) entity.state_manager.set("idle");
+      if (manager.duration >= constants.weapons[entity.weapon].attackDuration)
+        entity.state_manager.set("idle");
     },
   },
 } as States<Citizen>;
