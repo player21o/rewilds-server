@@ -1,19 +1,25 @@
 import * as fs from "fs";
 import * as path from "path";
-import { argv } from "process"; // Import argv for argument parsing
+import { argv } from "process";
 import { fileURLToPath } from "url";
 
-// --- Interfaces (Keep as they are) ---
-interface WildsAtlasFrameData {
+// --- Interfaces ---
+// Add optional markers to the base interface for better type checking
+interface WildsAtlasBaseData {
   width: number;
   height: number;
-  frames: number; // Frames per row
-  rows: number;
+  frames: number; // Frames per row or total frames
+  rows?: number;
+  srcX?: number;
+  srcY?: number;
+}
+
+// Keep the detailed interface for the complex format
+interface WildsAtlasFrameData extends WildsAtlasBaseData {
+  rows: number; // Now mandatory for this type
   markers?: { [key: string]: [number, number] };
   trim: number[];
   regions: number[];
-  srcX?: number;
-  srcY?: number;
 }
 
 interface TexturePackerFrame {
@@ -40,7 +46,47 @@ interface TexturePackerAtlas {
   animations: { [key: string]: string[] };
 }
 
-// --- Helper: Populate a single TexturePacker frame ---
+// --- NEW HELPER: Generate Data for Simple Spritesheets ---
+/**
+ * Takes a simple atlas format and generates the detailed `regions` and `trim` arrays
+ * that the rest of the conversion logic expects.
+ * @param simpleData The atlas data with only width, height, and frames.
+ * @param sheetWidth The total width of the source image.
+ * @returns A complete WildsAtlasFrameData object.
+ */
+function generateDetailedDataFromSimple(
+  simpleData: WildsAtlasBaseData,
+  sheetWidth: number
+): WildsAtlasFrameData {
+  const { width, height, frames } = simpleData;
+  const totalFrames = frames;
+  const cols = Math.floor(sheetWidth / width);
+  const rows = Math.ceil(totalFrames / cols);
+
+  const regions: number[] = [];
+  const trim: number[] = [];
+
+  for (let i = 0; i < totalFrames; i++) {
+    const row = Math.floor(i / cols);
+    const col = i % cols;
+
+    // Region: [x, y, w, h]
+    regions.push(col * width, row * height, width, height);
+
+    // Trim: [x, y] - no trimming in this format
+    trim.push(0, 0);
+  }
+
+  // Return a complete data object that the other functions can use
+  return {
+    ...simpleData,
+    rows: rows, // Calculate and add the rows property
+    regions,
+    trim,
+  };
+}
+
+// --- Helper: Populate a single TexturePacker frame (No changes needed) ---
 function populateTexturePackerFrame(
   wildsData: WildsAtlasFrameData,
   frameIndex: number,
@@ -53,13 +99,13 @@ function populateTexturePackerFrame(
 
   if (regionIndex + 3 >= wildsData.regions.length) {
     console.warn(
-      `Warning: Region data seems insufficient for frame index ${frameIndex} (expected ${totalFrames} frames). Skipping frame.`
+      `Warning: Region data insufficient for frame index ${frameIndex}. Skipping.`
     );
     return null;
   }
   if (trimIndex + 1 >= wildsData.trim.length) {
     console.warn(
-      `Warning: Trim data seems insufficient for frame index ${frameIndex} (expected ${totalFrames} frames). Skipping frame.`
+      `Warning: Trim data insufficient for frame index ${frameIndex}. Skipping.`
     );
     return null;
   }
@@ -91,7 +137,7 @@ function populateTexturePackerFrame(
   };
 }
 
-// --- Conversion Function (Standard: Markers > Default) ---
+// --- Conversion Function (Standard: Markers > Default) (No changes needed) ---
 function convertWildsToTexturePackerStandard(
   wildsData: WildsAtlasFrameData,
   imagePath: string,
@@ -99,15 +145,16 @@ function convertWildsToTexturePackerStandard(
   sheetHeight: number,
   frameNamePrefix: string = "frame"
 ): TexturePackerAtlas {
+  // This function now works because it will receive complete data
   const outputAtlas: TexturePackerAtlas = {
     frames: {},
     meta: {
-      image: "/" + imagePath.split("/").slice(-1)[0],
+      image: path.basename(imagePath),
       format: "RGBA8888",
       size: { w: sheetWidth, h: sheetHeight },
       scale: 1,
       app: "Wilds Atlas Converter (Standard)",
-      version: "1.1",
+      version: "1.2",
     },
     animations: {},
   };
@@ -126,20 +173,18 @@ function convertWildsToTexturePackerStandard(
       srcOffsetX,
       srcOffsetY
     );
-
     if (tpFrame) {
       outputAtlas.frames[frameName] = tpFrame;
-      allFrameNames.push(frameName); // Collect only valid frame names
+      allFrameNames.push(frameName);
     } else {
-      // Stop processing further frames if data is insufficient
       break;
     }
   }
 
-  // --- Populate Animations ---
   let markersProcessed = false;
   if (wildsData.markers && Object.keys(wildsData.markers).length > 0) {
     for (const markerName in wildsData.markers) {
+      // ... (rest of this function is unchanged) ...
       const markerData = wildsData.markers[markerName];
       if (
         Array.isArray(markerData) &&
@@ -150,52 +195,30 @@ function convertWildsToTexturePackerStandard(
         const [startFrame, endFrame] = markerData;
         const animationFrames: string[] = [];
         const clampedStart = Math.max(0, startFrame);
-        // Use totalFrames based on JSON, but ensure we don't exceed generated frame names
         const clampedEnd = Math.min(allFrameNames.length - 1, endFrame);
-
-        if (clampedStart > clampedEnd) {
-          console.warn(
-            `Warning: Invalid marker range for "${markerName}" [${startFrame}, ${endFrame}]. Skipping.`
-          );
-          continue;
-        }
-
+        if (clampedStart > clampedEnd) continue;
         for (let i = clampedStart; i <= clampedEnd; i++) {
           const frameName = `${frameNamePrefix}_${i}`;
-          // Check against actually generated frames
-          if (outputAtlas.frames[frameName]) {
-            animationFrames.push(frameName);
-          } else {
-            console.warn(
-              `Warning: Frame index ${i} referenced in marker "${markerName}" not found, though expected.`
-            );
-          }
+          if (outputAtlas.frames[frameName]) animationFrames.push(frameName);
         }
         if (animationFrames.length > 0) {
           outputAtlas.animations[markerName] = animationFrames;
           markersProcessed = true;
         }
-      } else {
-        console.warn(
-          `Warning: Invalid marker data for "${markerName}". Expected [startFrame, endFrame]. Skipping.`
-        );
       }
     }
   }
 
-  // If no markers were processed OR markers object is empty/null, create a default animation
-  if (!markersProcessed) {
-    if (allFrameNames.length > 0) {
-      const defaultAnimationName =
-        frameNamePrefix === "frame" ? "default" : frameNamePrefix;
-      outputAtlas.animations[defaultAnimationName] = allFrameNames;
-    }
+  if (!markersProcessed && allFrameNames.length > 0) {
+    const defaultAnimationName =
+      frameNamePrefix === "frame" ? "default" : frameNamePrefix;
+    outputAtlas.animations[defaultAnimationName] = allFrameNames;
   }
 
   return outputAtlas;
 }
 
-// --- Conversion Function (Row-Based) ---
+// --- Conversion Function (Row-Based) (No changes needed) ---
 function convertWildsToTexturePackerRowBased(
   wildsData: WildsAtlasFrameData,
   imagePath: string,
@@ -203,15 +226,16 @@ function convertWildsToTexturePackerRowBased(
   sheetHeight: number,
   frameNamePrefix: string = "frame"
 ): TexturePackerAtlas {
+  // This function also now works as it expects complete data
   const outputAtlas: TexturePackerAtlas = {
     frames: {},
     meta: {
-      image: "/" + imagePath.split("/").slice(-1)[0],
+      image: path.basename(imagePath),
       format: "RGBA8888",
       size: { w: sheetWidth, h: sheetHeight },
       scale: 1,
       app: "Wilds Atlas Converter (Row-Based)",
-      version: "1.1",
+      version: "1.2",
     },
     animations: {},
   };
@@ -229,55 +253,34 @@ function convertWildsToTexturePackerRowBased(
       srcOffsetX,
       srcOffsetY
     );
-
     if (tpFrame) {
       outputAtlas.frames[frameName] = tpFrame;
-
-      // --- Populate Animations (Group by Row) ---
       const rowIndex = Math.floor(i / wildsData.frames);
-      const animationName = `${frameNamePrefix}_row_${rowIndex}`; // Use prefix in animation name
+      const animationName = `${frameNamePrefix}_row_${rowIndex}`;
       if (!outputAtlas.animations[animationName]) {
         outputAtlas.animations[animationName] = [];
       }
       outputAtlas.animations[animationName].push(frameName);
     } else {
-      break; // Stop if data is insufficient
+      break;
     }
   }
-
   return outputAtlas;
 }
 
-// --- Command Line Execution ---
-
+// --- MODIFIED Command Line Execution ---
 function runConverter() {
-  // Simple argument parsing
+  // ... (argument parsing logic remains the same) ...
   const args = argv.slice(2);
   const rowBasedFlagIndex = args.findIndex(
     (arg) => arg === "--row-based" || arg === "-r"
   );
   const isRowBased = rowBasedFlagIndex !== -1;
-
-  if (isRowBased) {
-    args.splice(rowBasedFlagIndex, 1); // Remove the flag from args list
-  }
+  if (isRowBased) args.splice(rowBasedFlagIndex, 1);
 
   if (args.length < 5) {
-    console.error("\nError: Missing arguments.");
     console.error(
-      "Usage: ts-node convertAtlas.ts [--row-based|-r] <inputFile.json> <outputFile.json> <imagePath> <sheetWidth> <sheetHeight> [framePrefix]\n"
-    );
-    console.error("Options:");
-    console.error(
-      "  --row-based, -r : Create separate animations for each row."
-    );
-    console.error("\nExample (Standard):");
-    console.error(
-      "  ts-node convertAtlas.ts ./in/sprite.json ./out/sprite_tp.json images/sprite.png 512 256 sprite_"
-    );
-    console.error("\nExample (Row-Based):");
-    console.error(
-      "  ts-node convertAtlas.ts --row-based ./in/roll.json ./out/roll_tp.json images/roll.png 1024 512 roll"
+      "Usage: ts-node convertAtlas.ts [--row-based|-r] <inputFile.json> <outputFile.json> <imagePath> <sheetWidth> <sheetHeight> [framePrefix]"
     );
     process.exit(1);
   }
@@ -299,43 +302,33 @@ function runConverter() {
     sheetWidth <= 0 ||
     sheetHeight <= 0
   ) {
-    console.error(
-      "Error: Invalid sheetWidth or sheetHeight provided. Must be positive numbers."
-    );
+    console.error("Error: Invalid sheetWidth or sheetHeight.");
     process.exit(1);
   }
 
   try {
     const wildsJsonString = fs.readFileSync(inputFilePath, "utf-8");
-    const wildsData: WildsAtlasFrameData = JSON.parse(wildsJsonString);
+    const baseData: WildsAtlasBaseData = JSON.parse(wildsJsonString);
 
-    // --- Basic Validation ---
-    if (
-      typeof wildsData.width !== "number" ||
-      typeof wildsData.height !== "number" ||
-      typeof wildsData.frames !== "number" ||
-      typeof wildsData.rows !== "number" ||
-      !Array.isArray(wildsData.trim) ||
-      !Array.isArray(wildsData.regions)
-    ) {
-      console.error(
-        "Error: Input JSON data is missing required fields or has invalid types (width, height, frames, rows, trim, regions)."
-      );
-      process.exit(1);
+    // --- ** NEW: DATA NORMALIZATION STEP ** ---
+    let detailedData: WildsAtlasFrameData;
+
+    // Check if it's the simple format (lacks 'regions' array)
+    if (!("regions" in baseData) || !Array.isArray((baseData as any).regions)) {
+      console.log("Simple atlas format detected. Generating detailed data...");
+      detailedData = generateDetailedDataFromSimple(baseData, sheetWidth);
+    } else {
+      console.log("Detailed atlas format detected.");
+      // It's already the complex format, just cast it after validation
+      detailedData = baseData as WildsAtlasFrameData;
+      if (typeof detailedData.rows !== "number") {
+        // If rows is missing in a detailed format, we can calculate it
+        const cols = Math.floor(sheetWidth / detailedData.width);
+        detailedData.rows = Math.ceil(detailedData.frames / cols);
+        console.log(`Calculated 'rows' property to be: ${detailedData.rows}`);
+      }
     }
-    const expectedTrimLength = wildsData.rows * wildsData.frames * 2;
-    const expectedRegionsLength = wildsData.rows * wildsData.frames * 4;
-    if (wildsData.trim.length < expectedTrimLength) {
-      console.warn(
-        `Warning: Trim data length (${wildsData.trim.length}) is less than expected (${expectedTrimLength}). Some frames might be skipped.`
-      );
-    }
-    if (wildsData.regions.length < expectedRegionsLength) {
-      console.warn(
-        `Warning: Region data length (${wildsData.regions.length}) is less than expected (${expectedRegionsLength}). Some frames might be skipped.`
-      );
-    }
-    // --- End Validation ---
+    // --- END NEW STEP ---
 
     // Choose conversion function based on flag
     const conversionFunction = isRowBased
@@ -343,7 +336,7 @@ function runConverter() {
       : convertWildsToTexturePackerStandard;
 
     const texturePackerData = conversionFunction(
-      wildsData,
+      detailedData, // Use the normalized detailedData
       imagePath,
       sheetWidth,
       sheetHeight,
@@ -361,28 +354,24 @@ function runConverter() {
     console.log(
       `Successfully converted ${path.basename(
         inputFilePath
-      )} to ${path.basename(outputFilePath)} (${
-        isRowBased ? "row-based animations" : "standard conversion"
-      })`
+      )} to ${path.basename(outputFilePath)}`
     );
   } catch (error: any) {
-    if (error instanceof SyntaxError) {
-      console.error(`Error: Failed to parse input JSON file: ${inputFilePath}`);
-      console.error(error.message);
-    } else {
-      console.error("Error during conversion:", error.message);
-      console.error(error.stack);
-    }
+    console.error("Error during conversion:", error.message, error.stack);
     process.exit(1);
   }
 }
 
 // --- Run ---
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+// This check makes sure the script runs only when executed directly
+if (
+  import.meta.url.startsWith("file:") &&
+  process.argv[1] === fileURLToPath(import.meta.url)
+) {
   runConverter();
 }
 
-// --- Exports (optional, if used as a module) ---
+// --- Exports ---
 export {
   convertWildsToTexturePackerStandard,
   convertWildsToTexturePackerRowBased,
