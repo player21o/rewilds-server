@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@types/node": "^22.14.1",
+    "canvas": "^3.1.2",
     "msgpackr": "^1.11.4",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.51.0"
   }

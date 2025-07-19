@@ -21,7 +21,7 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
   public shield: CitizenType["shield"];
   public team: CitizenType["team"] = 0;
   public state: CitizenType["state"] = "idle";
-  public gender: CitizenType["gender"] = "female";
+  public gender: CitizenType["gender"] = "male";
   public type: CitizenType["type"];
   public growling = false;
   public maxArmor: number;

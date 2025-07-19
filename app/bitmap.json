@@ -1,0 +1,9 @@
+{
+  "imagePath": "/var/www/html/wilds/textures/spritesheet.png",
+  "fontName": "WildsDefault",
+  "baselineChars": "abcx",
+  "defs": [
+    [0, 231, 222, 11, "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTt()[]?"],
+    [0, 243, 222, 11, "UuVvWwXxYyZz0123456789.,|!\"/-+_%*❤Ã┌┐┼"]
+  ]
+}
