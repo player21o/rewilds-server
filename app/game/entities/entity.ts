@@ -5,6 +5,7 @@ import {
   ConstructorsInnerKeys,
   ConstructorsObject,
 } from "../../common/constructors";
+import { GameObject } from "../objects/object";
 import type { CollisionObject } from "./collisions";
 import type { CollisionResponse, Collisions } from "./collisions";
 
@@ -14,10 +15,10 @@ export type Collision<T extends Entity<any>> = (Polygon | Circle) & {
 };
 */
 
-export class Entity<K extends keyof ConstructorsObject = "Entity"> {
+export class Entity<
+  K extends keyof ConstructorsObject = "Entity"
+> extends GameObject {
   public sid: number = -1;
-  public x = 0;
-  public y = 0;
 
   private to_set: { [key: string]: any } = {};
 
@@ -25,9 +26,9 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
   public constructor_properties: ConstructorsInnerKeys[K];
 
   public new_one = true;
-  public collision: CollisionObject | null = null;
 
   public constructor(constructorName: K) {
+    super();
     this.constructor_name = constructorName;
 
     this.constructor_properties =
@@ -76,44 +77,6 @@ export class Entity<K extends keyof ConstructorsObject = "Entity"> {
 
     return updates;
   }
-
-  /*
-  protected process_collisions(system: System) {
-    if (this.collision == null) return;
-
-    this.update_collision_pos();
-    system.checkOne(this.collision, this.on_collision.bind(this));
-    //system.separateBody(this.collision);
-    //this.x = this.collision.x;
-    //this.y = this.collision.y;
-  }
-    */
-
-  //@ts-ignore
-  public on_collision(
-    //@ts-ignore
-    response: CollisionResponse,
-    //@ts-ignore
-    c: Collisions,
-    //@ts-ignore
-    entity_a: Entity<any>,
-    //@ts-ignore
-    entity_b: Entity<any>
-  ): void {
-    if (this.collision == null) return;
-  }
-
-  public update_collision_pos(c: Collisions) {
-    if (this.collision == null) return;
-
-    this.collision.x = this.x;
-    this.collision.y = this.y;
-
-    this.collision.update(c);
-  }
-
-  //@ts-ignore
-  public step(dt: number) {}
 
   /**
    * a function to set some value inside entity *outside* update loop (e. g. as an answer to packet)

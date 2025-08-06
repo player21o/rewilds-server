@@ -1,3 +1,5 @@
+import { normalizeAngle } from "../utils";
+
 export type CollisionResponse = {
   a: CollisionObject;
   b: CollisionObject;
@@ -475,6 +477,184 @@ function box_to_circle_collision(
 }
   */
 
+function arc_to_circle_collision(
+  arc: Arc,
+  circle: Circle
+): CollisionResponse | null {
+  // --- Coordinate Space Transformation ---
+  const scaleY = 1 / circle.squeezeY;
+
+  // 1. Vector from arc center to circle center, in TRANSFORMED space
+  const dx = circle.x - arc.x;
+  const dy_t = (circle.y - arc.y) * scaleY; // Transform the Y-delta
+
+  // 2. Find angle and distance of the circle's center in TRANSFORMED space.
+  const distanceSq_t = dx * dx + dy_t * dy_t;
+  const angleToCircle_t = Math.atan2(dy_t, dx);
+
+  // 3. Find angle relative to the arc's direction. The arc's angles are in world space.
+  //    To compare, we must find the arc's direction IN THE TRANSFORMED SPACE.
+  //    This is complex. A simpler, robust approximation is to assume the arc's
+  //    angular sweep is unchanged, which works well unless the arc is very wide
+  //    and the squeeze is very extreme. We will use this approximation.
+  let relativeAngle = normalizeAngle(angleToCircle_t - arc.direction);
+
+  // 4. Clamp the angle to the arc's sweep.
+  const halfSweep = arc.sweepAngle / 2;
+  const clampedAngle = Math.max(-halfSweep, Math.min(relativeAngle, halfSweep));
+
+  // 5. Convert the clamped angle back to a world-space direction.
+  const finalAngle = clampedAngle + arc.direction;
+
+  // 6. Clamp the distance to the arc's radii in TRANSFORMED space.
+  const distance_t = Math.sqrt(distanceSq_t);
+  // The arc's radii don't change, as the arc itself is not squeezed.
+  const clampedDist = Math.max(
+    arc.innerRadius,
+    Math.min(distance_t, arc.outerRadius)
+  );
+
+  // 7. We now have the closest point on the arc to the circle's center (in a hybrid space).
+  //    We calculate its position in world space for clarity.
+  const closestArcPointX = arc.x + Math.cos(finalAngle) * clampedDist;
+  const closestArcPointY =
+    arc.y + Math.sin(finalAngle) * (clampedDist / scaleY); // transform back
+
+  // --- The Collision Check ---
+
+  // 8. Find the vector from this closest point to the circle's center in WORLD space.
+  const vecToCircleX = circle.x - closestArcPointX;
+  const vecToCircleY = circle.y - closestArcPointY;
+
+  // We must check distance against the ellipse's shape.
+  // Is the vector smaller than the ellipse's radius in that direction?
+  const vecToCircleMag = Math.sqrt(
+    vecToCircleX * vecToCircleX + vecToCircleY * vecToCircleY
+  );
+  const vecToCircleAngle = Math.atan2(vecToCircleY, vecToCircleX);
+
+  // Find the ellipse's radius at the angle of the push vector.
+  const sin = Math.sin(vecToCircleAngle);
+  const cos = Math.cos(vecToCircleAngle);
+  const radiusAtAngle = Math.sqrt(
+    1 / ((cos / circle.radiusX) ** 2 + (sin / circle.radiusY) ** 2)
+  );
+
+  if (vecToCircleMag >= radiusAtAngle) {
+    return null;
+  }
+
+  // --- The Resolution ---
+  const overlap = radiusAtAngle - vecToCircleMag;
+
+  if (vecToCircleMag === 0) {
+    // If centers are on top of each other
+    const pushX = Math.cos(arc.direction) * overlap;
+    const pushY = Math.sin(arc.direction) * overlap;
+    return {
+      a: arc,
+      b: circle,
+      vector_a: [-pushX / 2, -pushY / 2],
+      vector_b: [pushX / 2, pushY / 2],
+    };
+  }
+
+  const pushX = (vecToCircleX / vecToCircleMag) * overlap;
+  const pushY = (vecToCircleY / vecToCircleMag) * overlap;
+
+  return {
+    a: arc,
+    b: circle,
+    vector_a: [-pushX / 2, -pushY / 2],
+    vector_b: [pushX / 2, pushY / 2],
+  };
+}
+
+function arc_to_box_collision(arc: Arc, box: Box): CollisionResponse | null {
+  // --- Step 1: Find the point on the Box closest to the Arc's center ---
+  const halfW = box.width / 2;
+  const halfH = box.height / 2;
+  const closestBoxX = Math.max(box.x - halfW, Math.min(arc.x, box.x + halfW));
+  const closestBoxY = Math.max(box.y - halfH, Math.min(arc.y, box.y + halfH));
+
+  // --- Step 2: Find the point on the Arc closest to that point on the Box ---
+  // This logic is identical to the arc-vs-circle logic, where the "circle"
+  // is the closestBoxPoint and has a radius of 0.
+  const dx = closestBoxX - arc.x;
+  const dy = closestBoxY - arc.y;
+
+  const angleToBoxPoint = Math.atan2(dy, dx);
+  let relativeAngle = normalizeAngle(angleToBoxPoint - arc.direction);
+
+  const halfSweep = arc.sweepAngle / 2;
+  const clampedAngle = Math.max(-halfSweep, Math.min(relativeAngle, halfSweep));
+
+  const finalAngle = clampedAngle + arc.direction;
+
+  const distToBoxPoint = Math.sqrt(dx * dx + dy * dy);
+  const clampedDist = Math.max(
+    arc.innerRadius,
+    Math.min(distToBoxPoint, arc.outerRadius)
+  );
+
+  const closestArcX = arc.x + Math.cos(finalAngle) * clampedDist;
+  const closestArcY = arc.y + Math.sin(finalAngle) * clampedDist;
+
+  // --- Step 3: Check for collision and get the MTV ---
+  // The MTV is the vector from the closest point on the arc to the closest point on the box.
+  const mtvX = closestBoxX - closestArcX;
+  const mtvY = closestBoxY - closestArcY;
+
+  const mtvMagSq = mtvX * mtvX + mtvY * mtvY;
+
+  // If the closest points are the same, they are overlapping.
+  // However, this check alone isn't enough. We also need to check if the
+  // box's closest point is inside the arc.
+  const isInside =
+    distToBoxPoint >= arc.innerRadius &&
+    distToBoxPoint <= arc.outerRadius &&
+    Math.abs(relativeAngle) <= halfSweep;
+
+  if (mtvMagSq > 1e-9) {
+    // If they are not touching, no collision. 1e-9 is a small epsilon.
+    // The only exception is if the box fully contains the arc's origin.
+    if (!isInside) return null;
+  }
+
+  // If we're here, they are colliding. The MTV we found is the push vector.
+  // But which way does it push? We need to push the arc away from the box.
+  const mtvMag = Math.sqrt(mtvMagSq);
+
+  // If the magnitude is zero (deep penetration), we need a fallback.
+  if (mtvMag === 0) {
+    // Push out from center of arc towards center of box
+    const fallbackDx = box.x - arc.x;
+    const fallbackDy = box.y - arc.y;
+    const fallbackMag =
+      Math.sqrt(fallbackDx * fallbackDx + fallbackDy * fallbackDy) || 1;
+    const overlap = 1; // Arbitrary small push
+    const pushX = (fallbackDx / fallbackMag) * overlap;
+    const pushY = (fallbackDy / fallbackMag) * overlap;
+    return {
+      a: arc,
+      b: box,
+      vector_a: [-pushX / 2, -pushY / 2],
+      vector_b: [pushX / 2, pushY / 2],
+    };
+  }
+
+  // The push vector to move the arc is the *opposite* of the MTV.
+  const pushX = -mtvX;
+  const pushY = -mtvY;
+
+  return {
+    a: arc,
+    b: box,
+    vector_a: [pushX / 2, pushY / 2],
+    vector_b: [-pushX / 2, -pushY / 2],
+  };
+}
+
 export function build_collision_response(
   a: CollisionObject,
   b: CollisionObject
@@ -496,6 +676,35 @@ export function build_collision_response(
         vector_b: swapped_response.vector_a,
       };
     }
+  } else if (a.type == "arc" && b.type == "box") {
+    return arc_to_box_collision(a as Arc, b as Box);
+  } else if (a.type == "box" && b.type == "arc") {
+    const result = arc_to_box_collision(b as Arc, a as Box);
+    if (result) {
+      // Remember to swap the response vectors!
+      return {
+        a: a,
+        b: b,
+        vector_a: result.vector_b,
+        vector_b: result.vector_a,
+      };
+    }
+    return null;
+  } else if (a.type == "arc" && b.type == "circle") {
+    // For now, we ignore the circle's squeeze factor for this collision type.
+    return arc_to_circle_collision(a as Arc, b as Circle);
+  } else if (a.type == "circle" && b.type == "arc") {
+    const result = arc_to_circle_collision(b as Arc, a as Circle);
+    // Remember to swap the response vectors!
+    if (result) {
+      return {
+        a: a,
+        b: b,
+        vector_a: result.vector_b,
+        vector_b: result.vector_a,
+      };
+    }
+    return null;
   }
 
   return null;
@@ -564,33 +773,28 @@ export class Circle extends CollisionObject {
   }
 
   public build(c: Collisions): void {
-    const left_up_corner_world = [this.x - this.radius, this.y - this.radius];
-    const right_down_corner_world = [
-      this.x + this.radius,
-      this.y + this.radius,
-    ];
+    const minX = this.x - this.radiusX;
+    const minY = this.y - this.radiusY;
+    const maxX = this.x + this.radiusX;
+    const maxY = this.y + this.radiusY;
 
-    const left_up_corner_cells = [
-      Math.floor(left_up_corner_world[0] / c.cell_size),
-      Math.floor(left_up_corner_world[1] / c.cell_size),
-    ];
+    const startX = Math.floor(minX / c.cell_size);
+    const startY = Math.floor(minY / c.cell_size);
+    const endX = Math.floor(maxX / c.cell_size);
+    const endY = Math.floor(maxY / c.cell_size);
 
-    const right_down_corner_cells = [
-      Math.ceil(right_down_corner_world[0] / c.cell_size),
-      Math.ceil(right_down_corner_world[1] / c.cell_size),
-    ];
-
-    for (
-      let x = left_up_corner_cells[0];
-      x < right_down_corner_cells[0] + 1;
-      x++
-    ) {
-      for (
-        let y = left_up_corner_cells[1];
-        y < right_down_corner_cells[1] + 1;
-        y++
-      ) {
-        this.set_cell(c, x, y);
+    for (let x = startX; x <= endX; x++) {
+      for (let y = startY; y <= endY; y++) {
+        // Safety check to ensure we don't write outside the grid
+        if (
+          x >= 0 &&
+          x < c.cells.length &&
+          c.cells[x] &&
+          y >= 0 &&
+          y < c.cells[x].length
+        ) {
+          this.set_cell(c, x, y);
+        }
       }
     }
   }
@@ -601,5 +805,71 @@ export class Circle extends CollisionObject {
 
   get radiusY(): number {
     return this.radius * this.squeezeY;
+  }
+}
+
+// Add this class to your project
+
+export class Arc extends CollisionObject {
+  public innerRadius: number;
+  public thickness: number; //thickness of the arc ring
+  public direction: number; //center angle of the arc in radians
+  public sweepAngle: number; // total angle of the arc in radians ("range")
+  public type = "arc";
+
+  constructor(
+    id: number,
+    x: number,
+    y: number,
+    innerRadius: number,
+    thickness: number,
+    direction: number,
+    sweepAngle: number
+  ) {
+    super(id, x, y);
+    this.innerRadius = innerRadius;
+    this.thickness = thickness;
+    this.direction = direction;
+    this.sweepAngle = sweepAngle;
+  }
+
+  get outerRadius(): number {
+    return this.innerRadius + this.thickness;
+  }
+
+  get startAngle(): number {
+    return this.direction - this.sweepAngle / 2;
+  }
+
+  get endAngle(): number {
+    return this.direction + this.sweepAngle / 2;
+  }
+
+  public build(c: Collisions): void {
+    const r = this.outerRadius; // Use the furthest possible point for the bounding box
+    const minX = this.x - r;
+    const minY = this.y - r;
+    const maxX = this.x + r;
+    const maxY = this.y + r;
+
+    const startX = Math.floor(minX / c.cell_size);
+    const startY = Math.floor(minY / c.cell_size);
+    const endX = Math.floor(maxX / c.cell_size);
+    const endY = Math.floor(maxY / c.cell_size);
+
+    for (let x = startX; x <= endX; x++) {
+      for (let y = startY; y <= endY; y++) {
+        // Safety check
+        if (
+          x >= 0 &&
+          x < c.cells.length &&
+          c.cells[x] &&
+          y >= 0 &&
+          y < c.cells[x].length
+        ) {
+          this.set_cell(c, x, y);
+        }
+      }
+    }
   }
 }

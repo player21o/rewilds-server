@@ -71,7 +71,9 @@ export class GameServer {
             Math.random() * 50 + 100,
             Math.random() * 50 + 100
           );
-          citizen.weapon = "no_weapon";
+          citizen.weapon = "axe";
+          citizen.shield = "shield_wooden";
+          citizen.team = 1;
           this.entities.add(citizen);
           peer.citizen = citizen;
         },

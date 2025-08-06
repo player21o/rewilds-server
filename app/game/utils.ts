@@ -4,3 +4,7 @@ export function lookAt(a: number, b: number, c: number, d: number) {
 
   return angle;
 }
+
+export function normalizeAngle(angle: number): number {
+  return angle - 2 * Math.PI * Math.floor((angle + Math.PI) / (2 * Math.PI));
+}

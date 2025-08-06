@@ -1,27 +1,42 @@
 import { Entity } from "./entity";
 import { constructors_object } from "../../common/constructors";
-import { build_collision_response, Collisions } from "./collisions";
+import { Arc, build_collision_response, Collisions } from "./collisions";
+import { GameObject } from "../objects/object";
 
 export class EntitiesManager {
   private sid_map: { [sid: number]: Entity } = {};
   private entities: Entity[] = [];
+  public objects: GameObject[] = [];
   private sid_counter = 0;
   private collision_system = new Collisions(10000, 10000);
+  private collision_counter = 0;
+  private collision_map: { [id: number]: Entity | GameObject } = {};
 
   private on_entity_created_callbacks: ((entity: Entity) => void)[] = [];
+
+  constructor() {
+    this.collision_system.insert(new Arc(-2, 300, 300, 12, 30, 0, Math.PI));
+  }
 
   public on_entity_created(cb: (entity: Entity) => void) {
     this.on_entity_created_callbacks.push(cb);
   }
 
-  public add(e: Entity<any>) {
-    e.sid = this.sid_counter;
-    this.sid_counter += 1;
-    this.sid_map[e.sid] = e;
-    this.entities.push(e);
-    this.on_entity_created_callbacks.forEach((cb) => cb(e));
+  public add(e: Entity<any> | GameObject) {
+    if (e instanceof Entity) {
+      e.sid = this.sid_counter;
+      this.sid_counter += 1;
+      this.sid_map[e.sid] = e;
+      this.entities.push(e);
+      this.on_entity_created_callbacks.forEach((cb) => cb(e));
+    } else {
+      this.objects.push(e);
+    }
+
     if (e.collision != null) {
-      e.collision.id = e.sid;
+      e.collision.id = this.collision_counter;
+      this.collision_counter += 1;
+      this.collision_map[e.collision.id] = e;
       this.collision_system.insert(e.collision);
     }
   }
@@ -33,17 +48,25 @@ export class EntitiesManager {
       before_props.push([entity, entity.update(dt, this.collision_system)])
     );
 
+    this.objects.forEach((obj) => obj.step(dt));
+
     this.collision_system.check().forEach((cols) => {
+      if (cols.includes(-2)) {
+        console.log("yes", Math.random());
+
+        return;
+      }
+
       const resp = build_collision_response(
-        this.sid_map[cols[0]].collision!,
-        this.sid_map[cols[1]].collision!
+        this.collision_map[cols[0]].collision!,
+        this.collision_map[cols[1]].collision!
       );
       if (resp != null)
-        this.sid_map[cols[0]].on_collision(
+        this.collision_map[cols[0]].on_collision(
           resp,
           this.collision_system,
-          this.sid_map[cols[0]],
-          this.sid_map[cols[1]]
+          this.collision_map[cols[0]],
+          this.collision_map[cols[1]]
         );
     });
 
@@ -87,25 +110,27 @@ export class EntitiesManager {
     return updates;
   }
 
-  public get(sid: number) {
+  public get_entity(sid: number) {
     return this.sid_map[sid];
   }
 
-  public get_by_index(i: number) {
+  public get_entity_by_index(i: number) {
     return this.entities[i];
   }
 
-  public remove(e: number | Entity) {
+  public remove(e: number | Entity | GameObject) {
     if (e instanceof Entity) {
       this.entities.splice(this.entities.indexOf(e), 1);
       delete this.sid_map[e.sid];
+    } else if (e instanceof GameObject) {
+      this.objects.splice(this.objects.indexOf(e), 1);
     } else {
       this.entities.splice(this.entities.indexOf(this.sid_map[e]), 1);
       delete this.sid_map[e];
     }
   }
 
-  public forEach(callback: (arg0: Entity) => void) {
+  public forEachEntity(callback: (arg0: Entity) => void) {
     this.entities.forEach(callback);
   }
 
