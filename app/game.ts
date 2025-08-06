@@ -69,7 +69,8 @@ export class GameServer {
             "hero",
             "hui",
             Math.random() * 50 + 100,
-            Math.random() * 50 + 100
+            Math.random() * 50 + 100,
+            this.entities
           );
           citizen.weapon = "axe";
           citizen.shield = "shield_wooden";

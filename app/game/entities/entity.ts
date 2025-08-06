@@ -6,8 +6,7 @@ import {
   ConstructorsObject,
 } from "../../common/constructors";
 import { GameObject } from "../objects/object";
-import type { CollisionObject } from "./collisions";
-import type { CollisionResponse, Collisions } from "./collisions";
+import type { Collisions } from "./collisions";
 
 /*
 export type Collision<T extends Entity<any>> = (Polygon | Circle) & {

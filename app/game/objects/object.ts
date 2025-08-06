@@ -13,9 +13,10 @@ export class GameObject {
   public x: number = 0;
   public y: number = 0;
   public collision: CollisionObject | null = null;
+  public rip = false;
 
   //@ts-ignore
-  public step(dt: number) {}
+  public step(dt: number, c?: Collisions) {}
 
   public on_collision(
     //@ts-ignore
@@ -37,5 +38,9 @@ export class GameObject {
     this.collision.y = this.y;
 
     this.collision.update(c);
+  }
+
+  public destroy() {
+    this.rip = true;
   }
 }

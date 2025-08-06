@@ -1,3 +1,4 @@
+import { EntitiesManager } from ".";
 import { Entity } from "./entity";
 
 export class StateManager<T = any> {
@@ -6,11 +7,18 @@ export class StateManager<T = any> {
 
   private states: States;
   private entity: Entity;
+  private entities: EntitiesManager;
 
-  constructor(states: States<any>, entity: Entity<any>, first_state: T) {
+  constructor(
+    states: States<any>,
+    entity: Entity<any>,
+    first_state: T,
+    ents: EntitiesManager
+  ) {
     this.states = states;
     this.set(first_state);
     this.entity = entity;
+    this.entities = ents;
   }
 
   public set(state: T) {
@@ -33,7 +41,7 @@ export class StateManager<T = any> {
 
     s = this.states[this.state as keyof typeof this.states];
 
-    if (s.enter != undefined) s.enter(this.entity, this);
+    if (s.enter != undefined) s.enter(this.entity, this, this.entities);
   }
 
   public step(dt: number) {
@@ -46,7 +54,11 @@ export class StateManager<T = any> {
 export type States<T extends Entity<any> = Entity<"Entity">> = {
   [E in string]: {
     flow?: E[];
-    enter?: (entity: T, manager: StateManager) => void;
+    enter?: (
+      entity: T,
+      manager: StateManager,
+      entities: EntitiesManager
+    ) => void;
     leave?: (entity: T, manager: StateManager) => void;
     step?: (dt: number, entity: T, manager: StateManager) => void;
   };

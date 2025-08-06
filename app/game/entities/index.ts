@@ -1,6 +1,6 @@
 import { Entity } from "./entity";
 import { constructors_object } from "../../common/constructors";
-import { Arc, build_collision_response, Collisions } from "./collisions";
+import { build_collision_response, Collisions } from "./collisions";
 import { GameObject } from "../objects/object";
 
 export class EntitiesManager {
@@ -13,10 +13,6 @@ export class EntitiesManager {
   private collision_map: { [id: number]: Entity | GameObject } = {};
 
   private on_entity_created_callbacks: ((entity: Entity) => void)[] = [];
-
-  constructor() {
-    this.collision_system.insert(new Arc(-2, 300, 300, 12, 30, 0, Math.PI));
-  }
 
   public on_entity_created(cb: (entity: Entity) => void) {
     this.on_entity_created_callbacks.push(cb);
@@ -43,20 +39,19 @@ export class EntitiesManager {
 
   public update(dt: number) {
     const before_props: [entity: Entity, props: any[]][] = [];
+    const to_remove: (Entity | GameObject)[] = [];
 
-    this.entities.forEach((entity) =>
-      before_props.push([entity, entity.update(dt, this.collision_system)])
-    );
+    this.entities.forEach((entity) => {
+      before_props.push([entity, entity.update(dt, this.collision_system)]);
+      if (entity.rip) to_remove.push(entity);
+    });
 
-    this.objects.forEach((obj) => obj.step(dt));
+    this.objects.forEach((obj) => {
+      obj.step(dt, this.collision_system);
+      if (obj.rip) to_remove.push(obj);
+    });
 
     this.collision_system.check().forEach((cols) => {
-      if (cols.includes(-2)) {
-        console.log("yes", Math.random());
-
-        return;
-      }
-
       const resp = build_collision_response(
         this.collision_map[cols[0]].collision!,
         this.collision_map[cols[1]].collision!
@@ -107,6 +102,8 @@ export class EntitiesManager {
       }
     });
 
+    to_remove.forEach((e) => this.remove(e));
+
     return updates;
   }
 
@@ -119,14 +116,25 @@ export class EntitiesManager {
   }
 
   public remove(e: number | Entity | GameObject) {
-    if (e instanceof Entity) {
-      this.entities.splice(this.entities.indexOf(e), 1);
-      delete this.sid_map[e.sid];
-    } else if (e instanceof GameObject) {
-      this.objects.splice(this.objects.indexOf(e), 1);
+    const entity: Entity | GameObject =
+      !(e instanceof Entity) && !(e instanceof GameObject)
+        ? this.sid_map[e as number]
+        : e;
+
+    if (entity instanceof Entity)
+      this.entities.splice(this.entities.indexOf(entity), 1);
+    else this.objects.splice(this.objects.indexOf(entity), 1);
+
+    if (entity instanceof Entity) {
+      this.entities.splice(this.entities.indexOf(entity), 1);
+      delete this.sid_map[entity.sid];
     } else {
-      this.entities.splice(this.entities.indexOf(this.sid_map[e]), 1);
-      delete this.sid_map[e];
+      this.objects.splice(this.objects.indexOf(entity), 1);
+    }
+
+    if (entity.collision != null) {
+      this.collision_system.remove(entity.collision);
+      delete this.collision_map[entity.collision.id];
     }
   }
 

@@ -1,4 +1,8 @@
-import { normalizeAngle } from "../utils";
+import {
+  getClosestPointOnSegment,
+  isPointInEllipse,
+  normalizeAngle,
+} from "../utils";
 
 export type CollisionResponse = {
   a: CollisionObject;
@@ -44,7 +48,7 @@ export class Collisions {
     if (c.size == 0) this.non_empty_cells.delete(c);
   }
 
-  private clear_cell(x: number, y: number, cell?: Set<number>) {
+  public clear_cell(x: number, y: number, cell?: Set<number>) {
     const c = cell != undefined ? cell : this.cells[x][y];
 
     c.clear();
@@ -54,6 +58,13 @@ export class Collisions {
   public insert(obj: CollisionObject) {
     this.objects[obj.id] = obj;
     obj.build(this);
+  }
+
+  public remove(obj: CollisionObject | number) {
+    const o = obj instanceof CollisionObject ? obj : this.objects[obj];
+
+    o.clear(this);
+    delete this.objects[o.id];
   }
 
   public check() {
@@ -477,97 +488,225 @@ function box_to_circle_collision(
 }
   */
 
+// --- THE DEBUGGING VERSION OF THE FUNCTION ---
+
+// NOTE: This uses the `getClosestPointOnSegment` helper from the previous attempt.
+
+// Your main collision function now just calls this for detection.
+// We will add the resolution logic back here LATER.
+// Make sure you have these helpers from the last attempt:
+// - normalizeAngle(angle)
+// - isPointInEllipse(point, ellipse)
+// - getClosestPointOnSegment(point, line_start, line_end)
+
+function arc_vs_ellipse_detection(arc: Arc, ellipse: Circle): boolean {
+  // --- CHECK 1: Is the ellipse's center inside the arc's shape? ---
+  if (isPointInArc({ x: ellipse.x, y: ellipse.y }, arc)) {
+    return true;
+  }
+
+  // --- CHECK 2: Does the ellipse contain any of the arc's 4 corners? ---
+  const startAngle = arc.startAngle;
+  const endAngle = arc.endAngle;
+  const s1 = {
+    x: arc.x + Math.cos(startAngle) * arc.innerRadius,
+    y: arc.y + Math.sin(startAngle) * arc.innerRadius,
+  };
+  const s2 = {
+    x: arc.x + Math.cos(startAngle) * arc.outerRadius,
+    y: arc.y + Math.sin(startAngle) * arc.outerRadius,
+  };
+  const e1 = {
+    x: arc.x + Math.cos(endAngle) * arc.innerRadius,
+    y: arc.y + Math.sin(endAngle) * arc.innerRadius,
+  };
+  const e2 = {
+    x: arc.x + Math.cos(endAngle) * arc.outerRadius,
+    y: arc.y + Math.sin(endAngle) * arc.outerRadius,
+  };
+
+  if (
+    isPointInEllipse(s1, ellipse) ||
+    isPointInEllipse(s2, ellipse) ||
+    isPointInEllipse(e1, ellipse) ||
+    isPointInEllipse(e2, ellipse)
+  ) {
+    return true;
+  }
+
+  // --- CHECK 3: Does the ellipse intersect the two flat end-caps? ---
+  const startEdgeInfo = getClosestPointOnSegment(
+    { x: ellipse.x, y: ellipse.y },
+    s1,
+    s2
+  );
+  if (isPointInEllipse(startEdgeInfo.closestPoint, ellipse)) {
+    return true;
+  }
+
+  const endEdgeInfo = getClosestPointOnSegment(
+    { x: ellipse.x, y: ellipse.y },
+    e1,
+    e2
+  );
+  if (isPointInEllipse(endEdgeInfo.closestPoint, ellipse)) {
+    return true;
+  }
+
+  // --- CHECK 4: Does the ellipse intersect the curved edges? ---
+  // This is the hardest check. We find the closest point on the ellipse to the arc's center,
+  // and then check if that point is inside the arc's shape.
+
+  // Find closest point on ellipse to arc's center. This is non-trivial.
+  // We can approximate it by finding the point on the ellipse's boundary along the line connecting the centers.
+  const dx = arc.x - ellipse.x;
+  const dy = arc.y - ellipse.y;
+  const angleToArc = Math.atan2(dy, dx);
+  const cosA = Math.cos(angleToArc);
+  const sinA = Math.sin(angleToArc);
+  const radiusAtAngle = Math.sqrt(
+    1 / ((cosA / ellipse.radiusX) ** 2 + (sinA / ellipse.radiusY) ** 2)
+  );
+
+  const closestPointOnEllipse = {
+    x: ellipse.x + cosA * radiusAtAngle,
+    y: ellipse.y + sinA * radiusAtAngle,
+  };
+
+  if (isPointInArc(closestPointOnEllipse, arc)) {
+    return true;
+  }
+
+  // If none of the above, no collision.
+  return false;
+}
+
 function arc_to_circle_collision(
   arc: Arc,
   circle: Circle
 ): CollisionResponse | null {
-  // --- Coordinate Space Transformation ---
-  const scaleY = 1 / circle.squeezeY;
+  // --- STEP 1: DETECTION ---
+  // Use our proven, reliable detector first. If no collision, we're done.
+  const isColliding = arc_vs_ellipse_detection(arc, circle);
+  if (!isColliding) {
+    return null;
+  }
+  console.log(isColliding);
 
-  // 1. Vector from arc center to circle center, in TRANSFORMED space
+  // --- STEP 2: RESOLUTION (Calculate the Push Vector) ---
+  // We know they are colliding. Now we find the Minimum Translation Vector (MTV).
+
+  // 2a. Find the closest point on the arc's boundary to the ellipse's center.
+  // This re-uses the exact same logic from our successful detector, ensuring consistency.
   const dx = circle.x - arc.x;
-  const dy_t = (circle.y - arc.y) * scaleY; // Transform the Y-delta
-
-  // 2. Find angle and distance of the circle's center in TRANSFORMED space.
-  const distanceSq_t = dx * dx + dy_t * dy_t;
-  const angleToCircle_t = Math.atan2(dy_t, dx);
-
-  // 3. Find angle relative to the arc's direction. The arc's angles are in world space.
-  //    To compare, we must find the arc's direction IN THE TRANSFORMED SPACE.
-  //    This is complex. A simpler, robust approximation is to assume the arc's
-  //    angular sweep is unchanged, which works well unless the arc is very wide
-  //    and the squeeze is very extreme. We will use this approximation.
-  let relativeAngle = normalizeAngle(angleToCircle_t - arc.direction);
-
-  // 4. Clamp the angle to the arc's sweep.
+  const dy = circle.y - arc.y;
+  const angleToCircle = Math.atan2(dy, dx);
+  const relativeAngle = normalizeAngle(angleToCircle - arc.direction);
   const halfSweep = arc.sweepAngle / 2;
-  const clampedAngle = Math.max(-halfSweep, Math.min(relativeAngle, halfSweep));
 
-  // 5. Convert the clamped angle back to a world-space direction.
-  const finalAngle = clampedAngle + arc.direction;
+  let closestArcPoint: { x: number; y: number };
 
-  // 6. Clamp the distance to the arc's radii in TRANSFORMED space.
-  const distance_t = Math.sqrt(distanceSq_t);
-  // The arc's radii don't change, as the arc itself is not squeezed.
-  const clampedDist = Math.max(
-    arc.innerRadius,
-    Math.min(distance_t, arc.outerRadius)
-  );
+  if (Math.abs(relativeAngle) <= halfSweep) {
+    // Region 1: Middle Sweep
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const distToInner = Math.abs(distance - arc.innerRadius);
+    const distToOuter = Math.abs(distance - arc.outerRadius);
+    const boundaryRadius =
+      distToInner < distToOuter ? arc.innerRadius : arc.outerRadius;
+    closestArcPoint = {
+      x: arc.x + Math.cos(angleToCircle) * boundaryRadius,
+      y: arc.y + Math.sin(angleToCircle) * boundaryRadius,
+    };
+  } else {
+    // Region 2 & 3: End Caps
+    const startAngle = arc.startAngle;
+    const endAngle = arc.endAngle;
+    const s1 = {
+      x: arc.x + Math.cos(startAngle) * arc.innerRadius,
+      y: arc.y + Math.sin(startAngle) * arc.innerRadius,
+    };
+    const s2 = {
+      x: arc.x + Math.cos(startAngle) * arc.outerRadius,
+      y: arc.y + Math.sin(startAngle) * arc.outerRadius,
+    };
+    const e1 = {
+      x: arc.x + Math.cos(endAngle) * arc.innerRadius,
+      y: arc.y + Math.sin(endAngle) * arc.innerRadius,
+    };
+    const e2 = {
+      x: arc.x + Math.cos(endAngle) * arc.outerRadius,
+      y: arc.y + Math.sin(endAngle) * arc.outerRadius,
+    };
 
-  // 7. We now have the closest point on the arc to the circle's center (in a hybrid space).
-  //    We calculate its position in world space for clarity.
-  const closestArcPointX = arc.x + Math.cos(finalAngle) * clampedDist;
-  const closestArcPointY =
-    arc.y + Math.sin(finalAngle) * (clampedDist / scaleY); // transform back
+    const startEdgeInfo = getClosestPointOnSegment(
+      { x: circle.x, y: circle.y },
+      s1,
+      s2
+    );
+    const endEdgeInfo = getClosestPointOnSegment(
+      { x: circle.x, y: circle.y },
+      e1,
+      e2
+    );
 
-  // --- The Collision Check ---
+    closestArcPoint =
+      startEdgeInfo.distanceSq < endEdgeInfo.distanceSq
+        ? startEdgeInfo.closestPoint
+        : endEdgeInfo.closestPoint;
+  }
 
-  // 8. Find the vector from this closest point to the circle's center in WORLD space.
-  const vecToCircleX = circle.x - closestArcPointX;
-  const vecToCircleY = circle.y - closestArcPointY;
-
-  // We must check distance against the ellipse's shape.
-  // Is the vector smaller than the ellipse's radius in that direction?
+  // 2b. Calculate the push vector based on this closest point.
+  const vecToCircleX = circle.x - closestArcPoint.x;
+  const vecToCircleY = circle.y - closestArcPoint.y;
   const vecToCircleMag = Math.sqrt(
     vecToCircleX * vecToCircleX + vecToCircleY * vecToCircleY
   );
-  const vecToCircleAngle = Math.atan2(vecToCircleY, vecToCircleX);
 
-  // Find the ellipse's radius at the angle of the push vector.
+  // Find the ellipse's radius in the direction of the push.
+  const vecToCircleAngle = Math.atan2(vecToCircleY, vecToCircleX);
   const sin = Math.sin(vecToCircleAngle);
   const cos = Math.cos(vecToCircleAngle);
   const radiusAtAngle = Math.sqrt(
     1 / ((cos / circle.radiusX) ** 2 + (sin / circle.radiusY) ** 2)
   );
 
-  if (vecToCircleMag >= radiusAtAngle) {
-    return null;
-  }
-
-  // --- The Resolution ---
+  // 2c. Calculate the overlap magnitude.
   const overlap = radiusAtAngle - vecToCircleMag;
 
-  if (vecToCircleMag === 0) {
-    // If centers are on top of each other
-    const pushX = Math.cos(arc.direction) * overlap;
-    const pushY = Math.sin(arc.direction) * overlap;
-    return {
-      a: arc,
-      b: circle,
-      vector_a: [-pushX / 2, -pushY / 2],
-      vector_b: [pushX / 2, pushY / 2],
-    };
+  let pushX: number, pushY: number;
+
+  if (vecToCircleMag < 1e-9) {
+    // Deep penetration: push out from arc center as a fallback
+    const fallbackMag = Math.sqrt(dx * dx + dy * dy) || 1;
+    pushX = (dx / fallbackMag) * radiusAtAngle;
+    pushY = (dy / fallbackMag) * radiusAtAngle;
+  } else {
+    // Normal push: move by the overlap amount along the vector
+    pushX = (vecToCircleX / vecToCircleMag) * overlap;
+    pushY = (vecToCircleY / vecToCircleMag) * overlap;
   }
 
-  const pushX = (vecToCircleX / vecToCircleMag) * overlap;
-  const pushY = (vecToCircleY / vecToCircleMag) * overlap;
+  console.log("um");
 
   return {
     a: arc,
     b: circle,
-    vector_a: [-pushX / 2, -pushY / 2],
-    vector_b: [pushX / 2, pushY / 2],
+    vector_a: [-pushX / 2, -pushY / 2], // Push arc AWAY from circle
+    vector_b: [pushX / 2, pushY / 2], // Push circle AWAY from arc
   };
+}
+
+// Helper function from before
+function isPointInArc(p: { x: number; y: number }, arc: Arc): boolean {
+  const dx = p.x - arc.x;
+  const dy = p.y - arc.y;
+  const distanceSq = dx * dx + dy * dy;
+  if (distanceSq < arc.innerRadius ** 2 || distanceSq > arc.outerRadius ** 2) {
+    return false;
+  }
+  const angle = Math.atan2(dy, dx);
+  const relativeAngle = normalizeAngle(angle - arc.direction);
+  return Math.abs(relativeAngle) <= arc.sweepAngle / 2;
 }
 
 function arc_to_box_collision(arc: Arc, box: Box): CollisionResponse | null {

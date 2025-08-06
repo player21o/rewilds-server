@@ -7,8 +7,9 @@ import { Entity } from "../entity";
 import { StateManager } from "../state";
 import states from "./states";
 import constants from "../../../common/constants";
-import { Box, Circle } from "../collisions";
+import { Circle } from "../collisions";
 import type { CollisionResponse, Collisions } from "../collisions";
+import { EntitiesManager } from "..";
 
 export class Citizen extends Entity<"Citizen"> implements CitizenType {
   public name: string;
@@ -31,11 +32,7 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
   public keys = 0;
   public pointerX = 0;
   public pointerY = 0;
-  public state_manager = new StateManager<CitizenType["state"]>(
-    states,
-    this,
-    this.state
-  );
+  public state_manager;
   public stamina = 1;
 
   public private_data_changes = { bits: 0b0, data: [] as any[] };
@@ -48,9 +45,16 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
     type: CitizenType["type"],
     name: string,
     x: number,
-    y: number
+    y: number,
+    e: EntitiesManager
   ) {
     super("Citizen");
+    this.state_manager = new StateManager<CitizenType["state"]>(
+      states,
+      this,
+      this.state,
+      e
+    );
 
     this.type = type;
 

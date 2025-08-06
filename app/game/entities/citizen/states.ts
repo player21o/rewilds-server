@@ -1,5 +1,6 @@
 import type { Citizen } from ".";
 import constants from "../../../common/constants";
+import { Slash } from "../../objects/slash";
 import { lookAt } from "../../utils";
 import { States } from "../state";
 
@@ -77,6 +78,18 @@ export default {
   */
   attack: {
     flow: ["idle"],
+    enter(entity, _manager, entities) {
+      const weapon = constants.weapons[entity.weapon];
+
+      entities.add(
+        new Slash(
+          entity,
+          weapon.meleeRange,
+          weapon.meleeArc,
+          weapon.attackDuration
+        )
+      );
+    },
     step(dt, entity, manager) {
       handle_movement(
         entity,
