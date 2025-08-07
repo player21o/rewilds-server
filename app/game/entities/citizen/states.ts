@@ -86,7 +86,8 @@ export default {
           entity,
           weapon.meleeRange,
           weapon.meleeArc,
-          weapon.attackDuration
+          weapon.attackDuration,
+          weapon.meleeDamage
         )
       );
     },

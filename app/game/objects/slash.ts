@@ -14,14 +14,22 @@ export class Slash extends GameObject {
   private timer = 0;
   private hits: number[] = [];
   public move_out_collision = false;
+  private damage: number;
 
-  constructor(e: Citizen, range: number, arc: number, duration: number) {
+  constructor(
+    e: Citizen,
+    range: number,
+    arc: number,
+    duration: number,
+    damage: number
+  ) {
     super();
     this.entity = e;
 
     this.x = e.x;
     this.y = e.y;
     this.duration = duration;
+    this.damage = damage;
 
     this.collision = new Arc(
       0,
@@ -44,7 +52,7 @@ export class Slash extends GameObject {
     if (c != undefined) this.update_collision_pos(c);
   }
 
-  public on_collision(other: GameObject, resp: CollisionResponse): void {
+  public on_collision(other: GameObject, _resp: CollisionResponse): void {
     if (
       other instanceof Citizen &&
       other.sid != this.entity.sid &&
@@ -52,7 +60,7 @@ export class Slash extends GameObject {
     ) {
       this.hits.push(other.sid);
 
-      other.set("health", other.health - 1);
+      other.set("health", other.health - this.damage);
     }
   }
 }

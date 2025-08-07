@@ -8,9 +8,7 @@ import { StateManager } from "../state";
 import states from "./states";
 import constants from "../../../common/constants";
 import { Circle } from "../collisions";
-import type { CollisionResponse, Collisions } from "../collisions";
 import { EntitiesManager } from "..";
-import { GameObject } from "../../objects/object";
 
 export class Citizen extends Entity<"Citizen"> implements CitizenType {
   public name: string;
