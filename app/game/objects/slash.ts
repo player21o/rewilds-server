@@ -4,7 +4,7 @@ import {
   CollisionResponse,
   Collisions,
 } from "../entities/collisions";
-import type { Citizen } from "../entities/citizen";
+import { Citizen } from "../entities/citizen";
 import { GameObject } from "./object";
 
 export class Slash extends GameObject {
@@ -12,6 +12,8 @@ export class Slash extends GameObject {
   public collision: CollisionObject | null;
   private duration: number;
   private timer = 0;
+  private hits: number[] = [];
+  public move_out_collision = false;
 
   constructor(e: Citizen, range: number, arc: number, duration: number) {
     super();
@@ -42,12 +44,15 @@ export class Slash extends GameObject {
     if (c != undefined) this.update_collision_pos(c);
   }
 
-  public on_collision(
-    _response: CollisionResponse,
-    _c: Collisions,
-    entity_a: GameObject,
-    entity_b: GameObject
-  ): void {
-    console.log(this.entity.sid, (entity_b as Citizen).sid);
+  public on_collision(other: GameObject, resp: CollisionResponse): void {
+    if (
+      other instanceof Citizen &&
+      other.sid != this.entity.sid &&
+      !(other.sid in this.hits)
+    ) {
+      this.hits.push(other.sid);
+
+      other.set("health", other.health - 1);
+    }
   }
 }

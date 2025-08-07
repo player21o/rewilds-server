@@ -501,84 +501,89 @@ function box_to_circle_collision(
 
 function arc_vs_ellipse_detection(arc: Arc, ellipse: Circle): boolean {
   // --- CHECK 1: Is the ellipse's center inside the arc's shape? ---
+  // This handles cases where the ellipse is "inside" the arc's donut shape.
   if (isPointInArc({ x: ellipse.x, y: ellipse.y }, arc)) {
     return true;
   }
 
-  // --- CHECK 2: Does the ellipse contain any of the arc's 4 corners? ---
-  const startAngle = arc.startAngle;
-  const endAngle = arc.endAngle;
-  const s1 = {
-    x: arc.x + Math.cos(startAngle) * arc.innerRadius,
-    y: arc.y + Math.sin(startAngle) * arc.innerRadius,
-  };
-  const s2 = {
-    x: arc.x + Math.cos(startAngle) * arc.outerRadius,
-    y: arc.y + Math.sin(startAngle) * arc.outerRadius,
-  };
-  const e1 = {
-    x: arc.x + Math.cos(endAngle) * arc.innerRadius,
-    y: arc.y + Math.sin(endAngle) * arc.innerRadius,
-  };
-  const e2 = {
-    x: arc.x + Math.cos(endAngle) * arc.outerRadius,
-    y: arc.y + Math.sin(endAngle) * arc.outerRadius,
-  };
+  // --- CHECK 2: Is the closest point on the arc's boundary inside the ellipse? ---
+  // This is the most important check and handles all other collision types.
 
-  if (
-    isPointInEllipse(s1, ellipse) ||
-    isPointInEllipse(s2, ellipse) ||
-    isPointInEllipse(e1, ellipse) ||
-    isPointInEllipse(e2, ellipse)
-  ) {
+  // 2a. Find the point on the arc's boundary that is closest to the ellipse's center.
+  // This re-uses the excellent logic you already wrote in your resolution function.
+  const dx = ellipse.x - arc.x;
+  const dy = ellipse.y - arc.y;
+
+  const distSqToCenter = dx * dx + dy * dy;
+
+  // If arc center and ellipse center are the same, they must be colliding
+  // (since check 1 would have failed, it means the origin is not within the radii,
+  // so the shapes must overlap).
+  if (distSqToCenter < 1e-9) {
     return true;
   }
 
-  // --- CHECK 3: Does the ellipse intersect the two flat end-caps? ---
-  const startEdgeInfo = getClosestPointOnSegment(
-    { x: ellipse.x, y: ellipse.y },
-    s1,
-    s2
-  );
-  if (isPointInEllipse(startEdgeInfo.closestPoint, ellipse)) {
-    return true;
+  const angleToEllipse = Math.atan2(dy, dx);
+  const relativeAngle = normalizeAngle(angleToEllipse - arc.direction);
+  const halfSweep = arc.sweepAngle / 2;
+
+  let closestArcPoint: { x: number; y: number };
+
+  // Determine if the closest point is on the curved sweeps or the flat end-caps.
+  if (Math.abs(relativeAngle) <= halfSweep) {
+    // The closest point is on one of the curved edges (inner or outer radius).
+    // We clamp the distance from the arc's center to be between the inner and outer radius.
+    const distToCenter = Math.sqrt(distSqToCenter);
+    const clampedRadius = Math.max(
+      arc.innerRadius,
+      Math.min(distToCenter, arc.outerRadius)
+    );
+    closestArcPoint = {
+      x: arc.x + Math.cos(angleToEllipse) * clampedRadius,
+      y: arc.y + Math.sin(angleToEllipse) * clampedRadius,
+    };
+  } else {
+    // The closest point is on one of the flat end-cap segments.
+    // We need to check which of the two end-caps is closer.
+    const startAngle = arc.startAngle;
+    const endAngle = arc.endAngle;
+
+    const s1 = {
+      x: arc.x + Math.cos(startAngle) * arc.innerRadius,
+      y: arc.y + Math.sin(startAngle) * arc.innerRadius,
+    };
+    const s2 = {
+      x: arc.x + Math.cos(startAngle) * arc.outerRadius,
+      y: arc.y + Math.sin(startAngle) * arc.outerRadius,
+    };
+    const e1 = {
+      x: arc.x + Math.cos(endAngle) * arc.innerRadius,
+      y: arc.y + Math.sin(endAngle) * arc.innerRadius,
+    };
+    const e2 = {
+      x: arc.x + Math.cos(endAngle) * arc.outerRadius,
+      y: arc.y + Math.sin(endAngle) * arc.outerRadius,
+    };
+
+    const startEdgeInfo = getClosestPointOnSegment(
+      { x: ellipse.x, y: ellipse.y },
+      s1,
+      s2
+    );
+    const endEdgeInfo = getClosestPointOnSegment(
+      { x: ellipse.x, y: ellipse.y },
+      e1,
+      e2
+    );
+
+    closestArcPoint =
+      startEdgeInfo.distanceSq < endEdgeInfo.distanceSq
+        ? startEdgeInfo.closestPoint
+        : endEdgeInfo.closestPoint;
   }
 
-  const endEdgeInfo = getClosestPointOnSegment(
-    { x: ellipse.x, y: ellipse.y },
-    e1,
-    e2
-  );
-  if (isPointInEllipse(endEdgeInfo.closestPoint, ellipse)) {
-    return true;
-  }
-
-  // --- CHECK 4: Does the ellipse intersect the curved edges? ---
-  // This is the hardest check. We find the closest point on the ellipse to the arc's center,
-  // and then check if that point is inside the arc's shape.
-
-  // Find closest point on ellipse to arc's center. This is non-trivial.
-  // We can approximate it by finding the point on the ellipse's boundary along the line connecting the centers.
-  const dx = arc.x - ellipse.x;
-  const dy = arc.y - ellipse.y;
-  const angleToArc = Math.atan2(dy, dx);
-  const cosA = Math.cos(angleToArc);
-  const sinA = Math.sin(angleToArc);
-  const radiusAtAngle = Math.sqrt(
-    1 / ((cosA / ellipse.radiusX) ** 2 + (sinA / ellipse.radiusY) ** 2)
-  );
-
-  const closestPointOnEllipse = {
-    x: ellipse.x + cosA * radiusAtAngle,
-    y: ellipse.y + sinA * radiusAtAngle,
-  };
-
-  if (isPointInArc(closestPointOnEllipse, arc)) {
-    return true;
-  }
-
-  // If none of the above, no collision.
-  return false;
+  // 2b. Now that we have the closest point on the arc, check if it's inside the ellipse.
+  return isPointInEllipse(closestArcPoint, ellipse);
 }
 
 function arc_to_circle_collision(
@@ -591,7 +596,6 @@ function arc_to_circle_collision(
   if (!isColliding) {
     return null;
   }
-  console.log(isColliding);
 
   // --- STEP 2: RESOLUTION (Calculate the Push Vector) ---
   // We know they are colliding. Now we find the Minimum Translation Vector (MTV).
@@ -685,8 +689,6 @@ function arc_to_circle_collision(
     pushX = (vecToCircleX / vecToCircleMag) * overlap;
     pushY = (vecToCircleY / vecToCircleMag) * overlap;
   }
-
-  console.log("um");
 
   return {
     a: arc,
@@ -789,7 +791,9 @@ function arc_to_box_collision(arc: Arc, box: Box): CollisionResponse | null {
   return {
     a: arc,
     b: box,
+    // The arc (a) gets pushed by the opposite of the mtv
     vector_a: [pushX / 2, pushY / 2],
+    // The box (b) gets pushed by the mtv itself
     vector_b: [-pushX / 2, -pushY / 2],
   };
 }

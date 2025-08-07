@@ -13,6 +13,7 @@ export class GameObject {
   public x: number = 0;
   public y: number = 0;
   public collision: CollisionObject | null = null;
+  public move_out_collision = true;
   public rip = false;
 
   //@ts-ignore
@@ -20,13 +21,10 @@ export class GameObject {
 
   public on_collision(
     //@ts-ignore
-    response: CollisionResponse,
+    other: GameObject,
     //@ts-ignore
-    c: Collisions,
+    response: CollisionResponse
     //@ts-ignore
-    entity_a: GameObject,
-    //@ts-ignore
-    entity_b: GameObject
   ): void {
     if (this.collision == null) return;
   }

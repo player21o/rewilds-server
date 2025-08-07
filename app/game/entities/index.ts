@@ -56,13 +56,23 @@ export class EntitiesManager {
         this.collision_map[cols[0]].collision!,
         this.collision_map[cols[1]].collision!
       );
-      if (resp != null)
-        this.collision_map[cols[0]].on_collision(
-          resp,
-          this.collision_system,
-          this.collision_map[cols[0]],
-          this.collision_map[cols[1]]
-        );
+      if (resp != null) {
+        const entity_a = this.collision_map[cols[0]];
+        const entity_b = this.collision_map[cols[1]];
+
+        entity_a.on_collision(entity_b, resp);
+        entity_b.on_collision(entity_a, resp);
+
+        if (entity_a.move_out_collision && entity_b.move_out_collision) {
+          entity_a.x += resp.vector_a[0];
+          entity_a.y += resp.vector_a[1];
+          entity_b.x += resp.vector_b[0];
+          entity_b.y += resp.vector_b[1];
+        }
+
+        entity_a.update_collision_pos(this.collision_system);
+        entity_b.update_collision_pos(this.collision_system);
+      }
     });
 
     const updates: [sid: number, props: any[], bits: number][] = [];

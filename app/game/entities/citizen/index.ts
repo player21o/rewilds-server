@@ -10,6 +10,7 @@ import constants from "../../../common/constants";
 import { Circle } from "../collisions";
 import type { CollisionResponse, Collisions } from "../collisions";
 import { EntitiesManager } from "..";
+import { GameObject } from "../../objects/object";
 
 export class Citizen extends Entity<"Citizen"> implements CitizenType {
   public name: string;
@@ -130,26 +131,6 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
 
       this.private_data_changes.bits = changed_bits;
       this.private_data_changes.data = changed_props;
-    }
-  }
-
-  public on_collision(
-    response: CollisionResponse,
-    c: Collisions,
-    entity_a: Entity<any>,
-    entity_b: Entity<any>
-  ): void {
-    if (this.collision == null) return;
-
-    if (entity_a instanceof Citizen && entity_b instanceof Citizen) {
-      entity_a.x += response.vector_a[0];
-      entity_a.y += response.vector_a[1];
-
-      entity_b.x += response.vector_b[0];
-      entity_b.y += response.vector_b[1];
-
-      entity_a.update_collision_pos(c);
-      entity_b.update_collision_pos(c);
     }
   }
 
