@@ -56,7 +56,7 @@ export class Slash extends GameObject {
     if (
       other instanceof Citizen &&
       other.sid != this.entity.sid &&
-      !(other.sid in this.hits)
+      !this.hits.includes(other.sid)
     ) {
       this.hits.push(other.sid);
 
