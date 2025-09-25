@@ -74,7 +74,7 @@ export class GameServer {
           );
           citizen.weapon = "axe";
           citizen.shield = "shield_wooden";
-          citizen.team = 1;
+          citizen.team = (this.entities.entities_count % 2) as 0 | 1;
           this.entities.add(citizen);
           peer.citizen = citizen;
         },

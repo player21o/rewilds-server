@@ -159,4 +159,8 @@ export class EntitiesManager {
   public stop() {
     this.on_entity_created_callbacks = [];
   }
+
+  get entities_count() {
+    return this.entities.length;
+  }
 }

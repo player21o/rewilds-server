@@ -55,6 +55,7 @@ export class Slash extends GameObject {
   public on_collision(other: GameObject, _resp: CollisionResponse): void {
     if (
       other instanceof Citizen &&
+      this.entity.team != other.team &&
       other.sid != this.entity.sid &&
       !this.hits.includes(other.sid)
     ) {
