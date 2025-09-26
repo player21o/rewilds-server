@@ -21,13 +21,14 @@ export class StateManager<T = any> {
     this.entities = ents;
   }
 
-  public set(state: T) {
+  public set(state: T, force = false) {
     if (
-      state == this.state ||
-      (this.state != null &&
-        !this.states[this.state as keyof typeof this.states].flow!.includes(
-          state as string
-        ))
+      !force &&
+      (state == this.state ||
+        (this.state != null &&
+          !this.states[this.state as keyof typeof this.states].flow!.includes(
+            state as string
+          )))
     )
       return;
 

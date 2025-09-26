@@ -80,6 +80,8 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
     let prev_bits = this.private_data_changes.bits;
     let changed_bits = 0b0;
 
+    if (this.health <= 0) this.die();
+
     if (!this.new_one) {
       const prev_props = constructors_inner_keys["CitizenPrivateData"].map(
         (prop) => {
@@ -135,5 +137,9 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
   public step_states(dt: number) {
     this.state_manager.step(dt);
     this.state = this.state_manager.state;
+  }
+
+  public die() {
+    this.state_manager.set("dying", true);
   }
 }

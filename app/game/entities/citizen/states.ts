@@ -103,4 +103,10 @@ export default {
         entity.state_manager.set("idle");
     },
   },
+  dying: {
+    flow: ["dead"],
+    step(_dt, _entity, manager) {
+      if (manager.duration >= 1.5) manager.set("dead");
+    },
+  },
 } as States<Citizen>;
