@@ -109,4 +109,5 @@ export default {
       if (manager.duration >= 1.5) manager.set("dead");
     },
   },
+  dead: {},
 } as States<Citizen>;

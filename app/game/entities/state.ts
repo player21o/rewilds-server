@@ -23,12 +23,12 @@ export class StateManager<T = any> {
 
   public set(state: T, force = false) {
     if (
-      !force &&
-      (state == this.state ||
-        (this.state != null &&
-          !this.states[this.state as keyof typeof this.states].flow!.includes(
-            state as string
-          )))
+      state == this.state ||
+      (!force &&
+        this.state != null &&
+        !this.states[this.state as keyof typeof this.states].flow!.includes(
+          state as string
+        ))
     )
       return;
 
