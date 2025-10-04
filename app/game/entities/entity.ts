@@ -84,8 +84,18 @@ export class Entity<
 
   public set<T extends keyof typeof this>(
     key: T,
-    value: ToPrimitive<(typeof this)[T]>
+    value:
+      | ((
+          prev_value: ToPrimitive<(typeof this)[T]>
+        ) => ToPrimitive<(typeof this)[T]>)
+      | ToPrimitive<(typeof this)[T]>
   ) {
-    this.to_set[key as any] = value;
+    if (typeof value == "function") {
+      this.to_set[key as any] = value(
+        key in this.to_set ? this.to_set[key as any] : this[key]
+      );
+    } else {
+      this.to_set[key as any] = value;
+    }
   }
 }

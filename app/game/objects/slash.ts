@@ -61,7 +61,7 @@ export class Slash extends GameObject {
     ) {
       this.hits.push(other.sid);
 
-      other.set("health", other.health - this.damage);
+      other.set("health", (hp) => hp - this.damage);
     }
   }
 }
