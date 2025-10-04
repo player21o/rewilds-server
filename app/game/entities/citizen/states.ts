@@ -105,9 +105,18 @@ export default {
   },
   dying: {
     flow: ["dead"],
-    step(_dt, _entity, manager) {
-      if (manager.duration >= 1.5) manager.set("dead");
+    step(dt, entity, manager) {
+      const duration = 1.5;
+
+      const vec = [
+        100 * Math.cos(entity.direction),
+        100 * Math.sin(entity.direction),
+      ];
+      entity.x = entity.x - (duration - manager.duration) * vec[0] * dt;
+      entity.y = entity.y - (duration - manager.duration) * vec[1] * dt;
+
+      if (manager.duration >= duration) manager.set("dead");
     },
   },
   dead: {},
-} as States<Citizen>;
+} as States<Citizen, Citizen["state"]>;

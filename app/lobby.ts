@@ -40,5 +40,3 @@ export class LobbyServer {
       .listen(config.lobby.port, () => {});
   }
 }
-
-export let lobby = new LobbyServer();

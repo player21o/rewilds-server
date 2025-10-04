@@ -52,15 +52,15 @@ export class StateManager<T = any> {
   }
 }
 
-export type States<T extends Entity<any> = Entity<"Entity">> = {
+export type States<T extends Entity<any> = Entity<"Entity">, S = any> = {
   [E in string]: {
     flow?: E[];
     enter?: (
       entity: T,
-      manager: StateManager,
+      manager: StateManager<S>,
       entities: EntitiesManager
     ) => void;
-    leave?: (entity: T, manager: StateManager) => void;
-    step?: (dt: number, entity: T, manager: StateManager) => void;
+    leave?: (entity: T, manager: StateManager<S>) => void;
+    step?: (dt: number, entity: T, manager: StateManager<S>) => void;
   };
 };

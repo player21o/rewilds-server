@@ -6,6 +6,7 @@ import {
 } from "../entities/collisions";
 import { Citizen } from "../entities/citizen";
 import { GameObject } from "./object";
+import { lookAt } from "../utils";
 
 export class Slash extends GameObject {
   private entity: Citizen;
@@ -57,11 +58,27 @@ export class Slash extends GameObject {
       other instanceof Citizen &&
       this.entity.team != other.team &&
       other.sid != this.entity.sid &&
+      other.state != "dead" &&
+      other.state != "dying" &&
       !this.hits.includes(other.sid)
     ) {
       this.hits.push(other.sid);
 
-      other.set("health", (hp) => hp - this.damage);
+      other.set("health", (hp) => {
+        const new_hp = hp - this.damage;
+
+        if (new_hp <= 0) {
+          //if the hit is fatal
+          other.direction = lookAt(
+            other.x,
+            other.y,
+            this.entity.x,
+            this.entity.y
+          );
+        }
+
+        return new_hp;
+      });
     }
   }
 }
