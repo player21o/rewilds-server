@@ -56,6 +56,9 @@ export default {
       case "attack":
         citizen.state_manager.set("attack");
         break;
+      case "block":
+        citizen.state_manager.set("block");
+        break;
     }
   },
 } as Packets;

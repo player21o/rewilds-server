@@ -4,7 +4,8 @@ import { Slash } from "../../objects/slash";
 import { lookAt } from "../../utils";
 import { States } from "../state";
 
-function handle_movement(entity: Citizen, dt: number, speed: number) {
+function handle_movement(entity: Citizen, dt: number) {
+  const speed = entity.growling ? entity.data.speed * 1.333 : entity.data.speed;
   //w, a, s, d
   const final_vector = [0, 0];
 
@@ -34,6 +35,13 @@ function handle_movement(entity: Citizen, dt: number, speed: number) {
 
   entity.x += speed * final_vector[0] * dt;
   entity.y += speed * final_vector[1] * dt;
+
+  if (entity.stamina <= 0) entity.growling = false;
+  if (entity.growling && entity.moving) {
+    entity.stamina -= entity.data.staminaUsage * dt;
+  } else if (entity.stamina < 1) {
+    entity.stamina += 0.1 * dt;
+  }
 }
 
 function handle_pointer(entity: Citizen) {
@@ -47,35 +55,19 @@ function handle_pointer(entity: Citizen) {
 
 export default {
   idle: {
-    flow: ["attack"],
+    flow: ["attack", "charge", "block"],
     step(dt, entity, _manager) {
-      if (entity.stamina <= 0) entity.growling = false;
-      handle_movement(
-        entity,
-        dt,
-        entity.growling ? entity.data.speed * 1.333 : entity.data.speed
-      );
+      handle_movement(entity, dt);
       handle_pointer(entity);
-
-      if (entity.growling && entity.moving) {
-        entity.stamina -= entity.data.staminaUsage * dt;
-      } else if (entity.stamina < 1) {
-        entity.stamina += 0.1 * dt;
-      }
     },
   },
-  /*
-  growl: {
+  charge: {
     flow: ["idle"],
     step(dt, entity, _manager) {
-      if (entity.stamina <= 0) entity.state_manager.set("idle");
-      handle_movement(entity, dt, 150 * 1.333);
+      handle_movement(entity, dt);
       handle_pointer(entity);
-      entity.stamina -= 0.3 * dt;
     },
-    
   },
-  */
   attack: {
     flow: ["idle"],
     enter(entity, _manager, entities) {
@@ -92,11 +84,7 @@ export default {
       );
     },
     step(dt, entity, manager) {
-      handle_movement(
-        entity,
-        dt,
-        entity.growling ? entity.data.speed * 1.333 : entity.data.speed
-      );
+      handle_movement(entity, dt);
       handle_pointer(entity);
 
       if (manager.duration >= constants.weapons[entity.weapon].attackDuration)
@@ -118,5 +106,21 @@ export default {
       if (manager.duration >= duration) manager.set("dead");
     },
   },
-  dead: {},
+  block: {
+    flow: ["idle"],
+    step(dt, entity, manager) {
+      handle_movement(entity, dt);
+      handle_pointer(entity);
+
+      const duration = 0.75;
+
+      if (manager.duration >= duration) manager.set("idle");
+    },
+  },
+  stunned: {
+    flow: ["idle"],
+    step(_dt, _entity, manager) {
+      if (manager.duration >= 1) manager.set("idle");
+    },
+  },
 } as States<Citizen, Citizen["state"]>;

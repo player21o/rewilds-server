@@ -52,9 +52,12 @@ export class StateManager<T = any> {
   }
 }
 
-export type States<T extends Entity<any> = Entity<"Entity">, S = any> = {
-  [E in string]: {
-    flow?: E[];
+export type States<
+  T extends Entity<any> = Entity<"Entity">,
+  S extends string | number | symbol = any
+> = {
+  [E in S]: {
+    flow?: S[];
     enter?: (
       entity: T,
       manager: StateManager<S>,
