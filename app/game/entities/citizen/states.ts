@@ -123,4 +123,5 @@ export default {
       if (manager.duration >= 1) manager.set("idle");
     },
   },
+  dead: {},
 } as States<Citizen, Citizen["state"]>;

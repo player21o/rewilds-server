@@ -62,13 +62,14 @@ export class Slash extends GameObject {
       other.state != "dying" &&
       !this.hits.includes(other.sid)
     ) {
+      this.hits.push(other.sid);
+
       if (other.state == "block") {
         this.entity.state_manager.set("stunned", true);
+        this.rip = true;
 
         return;
       }
-
-      this.hits.push(other.sid);
 
       other.set("health", (hp) => {
         const new_hp = hp - this.damage;
