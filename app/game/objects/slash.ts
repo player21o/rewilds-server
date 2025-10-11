@@ -62,30 +62,32 @@ export class Slash extends GameObject {
       other.state != "dying" &&
       !this.hits.includes(other.sid)
     ) {
-      this.hits.push(other.sid);
-
       if (other.state == "block") {
-        this.entity.state_manager.set("stunned", true);
-        this.rip = true;
+        if (this.entity.state_manager.duration >= 0.3) {
+          this.entity.state_manager.set("stunned", true);
+          this.rip = true;
 
-        return;
-      }
-
-      other.set("health", (hp) => {
-        const new_hp = hp - this.damage;
-
-        if (new_hp <= 0) {
-          //if the hit is fatal
-          other.direction = lookAt(
-            other.x,
-            other.y,
-            this.entity.x,
-            this.entity.y
-          );
+          return;
         }
+      } else {
+        this.hits.push(other.sid);
 
-        return new_hp;
-      });
+        other.set("health", (hp) => {
+          const new_hp = hp - this.damage;
+
+          if (new_hp <= 0) {
+            //if the hit is fatal
+            other.direction = lookAt(
+              other.x,
+              other.y,
+              this.entity.x,
+              this.entity.y
+            );
+          }
+
+          return new_hp;
+        });
+      }
     }
   }
 }

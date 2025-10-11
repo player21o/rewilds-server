@@ -112,7 +112,7 @@ export default {
       handle_movement(entity, dt);
       handle_pointer(entity);
 
-      const duration = 0.75;
+      const duration = 1;
 
       if (manager.duration >= duration) manager.set("idle");
     },

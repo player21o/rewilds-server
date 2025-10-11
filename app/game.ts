@@ -179,7 +179,8 @@ export class GameServer {
     this.game_loop(ticks);
 
     setInterval(() => {
-      this.broadcast("update", this.entities_updates);
+      if (this.entities_updates.length > 0)
+        this.broadcast("update", this.entities_updates);
       this.entities_updates = [];
     }, 1000 / update_ticks);
 
