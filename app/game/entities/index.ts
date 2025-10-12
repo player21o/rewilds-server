@@ -8,7 +8,7 @@ export class EntitiesManager {
   private entities: Entity[] = [];
   public objects: GameObject[] = [];
   private sid_counter = 0;
-  private collision_system = new Collisions(10000, 10000);
+  public collision_system = new Collisions(10000, 10000);
   private collision_counter = 0;
   private collision_map: { [id: number]: Entity | GameObject } = {};
 

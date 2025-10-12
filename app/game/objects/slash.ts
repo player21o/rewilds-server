@@ -63,7 +63,7 @@ export class Slash extends GameObject {
       !this.hits.includes(other.sid)
     ) {
       if (other.state == "block") {
-        if (this.entity.state_manager.duration >= 0.3) {
+        if (this.entity.state_manager.duration >= 0.25) {
           this.entity.state_manager.set("stunned", true);
           this.rip = true;
 

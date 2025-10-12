@@ -33,6 +33,7 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
   public pointerY = 0;
   public state_manager;
   public stamina = 1;
+  private died = false;
 
   public private_data_changes = { bits: 0b0, data: [] as any[] };
 
@@ -80,8 +81,7 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
     let prev_bits = this.private_data_changes.bits;
     let changed_bits = 0b0;
 
-    if (this.health <= 0 && this.state != "dead" && this.state != "dying")
-      this.die();
+    if (this.health <= 0 && !this.died) this.die();
 
     if (!this.new_one) {
       const prev_props = constructors_inner_keys["CitizenPrivateData"].map(
@@ -141,6 +141,7 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
   }
 
   public die() {
+    this.died = true;
     this.state_manager.set("dying", true);
   }
 }

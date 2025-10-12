@@ -26,9 +26,13 @@ export class StateManager<T = any> {
       state == this.state ||
       (!force &&
         this.state != null &&
-        !this.states[this.state as keyof typeof this.states].flow!.includes(
-          state as string
-        ))
+        ((this.states[this.state as keyof typeof this.states].flow !=
+          undefined &&
+          !this.states[this.state as keyof typeof this.states].flow!.includes(
+            state as string
+          )) ||
+          this.states[this.state as keyof typeof this.states].flow ==
+            undefined))
     )
       return;
 

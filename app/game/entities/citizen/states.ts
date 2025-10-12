@@ -93,6 +93,9 @@ export default {
   },
   dying: {
     flow: ["dead"],
+    enter(entity, _manager, entities) {
+      entity.collision.destroy(entities.collision_system);
+    },
     step(dt, entity, manager) {
       const duration = 1.5;
 

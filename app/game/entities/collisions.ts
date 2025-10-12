@@ -123,6 +123,9 @@ export class CollisionObject {
     this.clear(c);
     this.build(c);
   }
+  public destroy(c: Collisions) {
+    c.remove(this);
+  }
 }
 
 export function box_to_box_collision(a: Box, b: Box): CollisionResponse | null {
