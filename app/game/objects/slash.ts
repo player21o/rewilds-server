@@ -67,6 +67,8 @@ export class Slash extends GameObject {
           this.entity.state_manager.set("stunned", true);
           this.rip = true;
 
+          //broadcast a clash event
+
           return;
         }
       } else {

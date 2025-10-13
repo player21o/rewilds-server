@@ -48,6 +48,14 @@ export class Collisions {
     if (c.size == 0) this.non_empty_cells.delete(c);
   }
 
+  public remove_id_from_cell_ref(cell: Set<number>, id: number) {
+    cell.delete(id);
+
+    if (cell.size === 0) {
+      this.non_empty_cells.delete(cell);
+    }
+  }
+
   public clear_cell(x: number, y: number, cell?: Set<number>) {
     const c = cell != undefined ? cell : this.cells[x][y];
 
@@ -64,6 +72,7 @@ export class Collisions {
     const o = obj instanceof CollisionObject ? obj : this.objects[obj];
 
     o.clear(this);
+    o.disabled = true;
     delete this.objects[o.id];
   }
 
@@ -103,6 +112,7 @@ export class CollisionObject {
   public y: number;
   public type = "object";
   private cells: Set<Set<number>> = new Set();
+  public disabled = false;
 
   constructor(id: number, x: number, y: number) {
     this.id = id;
@@ -114,12 +124,14 @@ export class CollisionObject {
     const cell = c.set_cell(x, y, this.id);
     if (cell != undefined) this.cells.add(cell);
   }
+  //@ts-ignore
   public build(c: Collisions) {}
   public clear(c: Collisions) {
-    this.cells.forEach((cell) => c.remove_id_from_cell(0, 0, this.id, cell));
+    this.cells.forEach((cell) => c.remove_id_from_cell_ref(cell, this.id));
     this.cells.clear();
   }
   public update(c: Collisions) {
+    if (this.disabled) return;
     this.clear(c);
     this.build(c);
   }
