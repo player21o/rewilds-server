@@ -2,6 +2,7 @@ import { Entity } from "./entity";
 import { constructors_object } from "../../common/constructors";
 import { build_collision_response, Collisions } from "./collisions";
 import { GameObject } from "../objects/object";
+import { GameNetworking } from "../networking";
 
 export class EntitiesManager {
   private sid_map: { [sid: number]: Entity } = {};
@@ -12,7 +13,13 @@ export class EntitiesManager {
   private collision_counter = 0;
   private collision_map: { [id: number]: Entity | GameObject } = {};
 
+  private network: GameNetworking;
+
   private on_entity_created_callbacks: ((entity: Entity) => void)[] = [];
+
+  public constructor(network: GameNetworking) {
+    this.network = network;
+  }
 
   public on_entity_created(cb: (entity: Entity) => void) {
     this.on_entity_created_callbacks.push(cb);
@@ -47,21 +54,21 @@ export class EntitiesManager {
     });
 
     this.objects.forEach((obj) => {
-      obj.step(dt, this.collision_system);
+      obj.step(dt, this.network, this.collision_system);
       if (obj.rip) to_remove.push(obj);
     });
 
     this.collision_system.check().forEach((cols) => {
       const resp = build_collision_response(
         this.collision_map[cols[0]].collision!,
-        this.collision_map[cols[1]].collision!
+        this.collision_map[cols[1]].collision!,
       );
       if (resp != null) {
         const entity_a = this.collision_map[cols[0]];
         const entity_b = this.collision_map[cols[1]];
 
-        entity_a.on_collision(entity_b, resp);
-        entity_b.on_collision(entity_a, resp);
+        entity_a.on_collision(entity_b, resp, this.network);
+        entity_b.on_collision(entity_a, resp, this.network);
 
         if (entity_a.move_out_collision && entity_b.move_out_collision) {
           entity_a.x += resp.vector_a[0];
@@ -95,7 +102,7 @@ export class EntitiesManager {
           const propName = prop as keyof typeof constructor;
           const converterPair = constructor[propName] as readonly [
             (val: any) => any,
-            (val: any) => any
+            (val: any) => any,
           ];
 
           const formatted = converterPair[0]((entity as any)[prop]);

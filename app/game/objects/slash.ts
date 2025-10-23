@@ -7,6 +7,7 @@ import {
 import { Citizen } from "../entities/citizen";
 import { GameObject } from "./object";
 import { lookAt } from "../utils";
+import { GameNetworking } from "../networking";
 
 export class Slash extends GameObject {
   private entity: Citizen;
@@ -22,7 +23,7 @@ export class Slash extends GameObject {
     range: number,
     arc: number,
     duration: number,
-    damage: number
+    damage: number,
   ) {
     super();
     this.entity = e;
@@ -39,11 +40,11 @@ export class Slash extends GameObject {
       e.collision.radius,
       range,
       e.direction,
-      arc
+      arc,
     );
   }
 
-  public step(dt: number, c?: Collisions): void {
+  public step(dt: number, _n: GameNetworking, c?: Collisions): void {
     this.x = this.entity.x;
     this.y = this.entity.y;
 
@@ -53,7 +54,11 @@ export class Slash extends GameObject {
     if (c != undefined) this.update_collision_pos(c);
   }
 
-  public on_collision(other: GameObject, _resp: CollisionResponse): void {
+  public on_collision(
+    other: GameObject,
+    _resp: CollisionResponse,
+    n: GameNetworking,
+  ): void {
     if (
       other instanceof Citizen &&
       this.entity.team != other.team &&
@@ -68,6 +73,7 @@ export class Slash extends GameObject {
           this.rip = true;
 
           //broadcast a clash event
+          n.broadcast("clash_shield", other.sid);
 
           return;
         }
@@ -83,7 +89,7 @@ export class Slash extends GameObject {
               other.x,
               other.y,
               this.entity.x,
-              this.entity.y
+              this.entity.y,
             );
           }
 

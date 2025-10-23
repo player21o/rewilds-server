@@ -4,22 +4,20 @@ import { Citizen } from "./entities/citizen";
 import { GameNetworking } from "./networking";
 
 export class GameServer {
-  private entities = new EntitiesManager();
+  private entities: EntitiesManager;
   private entities_updates: any = [];
   private network: GameNetworking;
 
   private last_time: number = Date.now();
 
   constructor(port: number, tickrate: number, upd_tickrate: number) {
-    this.launch_game_loop(tickrate, upd_tickrate);
-
     this.network = new GameNetworking(port, (peer) => {
       const citizen = new Citizen(
         "hero",
         "hui",
         Math.random() * 50 + 100,
         Math.random() * 50 + 100,
-        this.entities
+        this.entities,
       );
       citizen.weapon = "axe";
       citizen.shield = "shield_wooden";
@@ -27,6 +25,10 @@ export class GameServer {
       this.entities.add(citizen);
       peer.citizen = citizen;
     });
+
+    this.entities = new EntitiesManager(this.network);
+
+    this.launch_game_loop(tickrate, upd_tickrate);
   }
 
   private game_loop(ticks: number) {
@@ -35,7 +37,7 @@ export class GameServer {
     this.last_time = now;
 
     this.entities_updates.push(
-      ...this.entities.update(dt).map((u: any) => [u[0], u[2], ...u[1]])
+      ...this.entities.update(dt).map((u: any) => [u[0], u[2], ...u[1]]),
     );
 
     const tickLength = 1000 / ticks;
@@ -47,7 +49,7 @@ export class GameServer {
       const dt = (Date.now() - this.last_time) / 1000;
 
       this.entities_updates.push(
-        ...this.entities.update(dt).map((u) => [u[0], u[2], ...u[1]])
+        ...this.entities.update(dt).map((u) => [u[0], u[2], ...u[1]]),
       );
 
       this.last_time = Date.now();
@@ -73,7 +75,7 @@ export class GameServer {
           p.send(
             "private",
             p.citizen.private_data_changes.bits,
-            p.citizen.private_data_changes.data
+            p.citizen.private_data_changes.data,
           );
           p.citizen.private_data_changes.bits = 0b0;
           p.citizen.private_data_changes.data = [];

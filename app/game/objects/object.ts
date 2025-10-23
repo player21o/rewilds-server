@@ -1,43 +1,9 @@
 import {
-  ConstructorsInnerTypes,
-  ConstructorsObject,
-} from "../../common/constructors";
-import {
   CollisionObject,
   CollisionResponse,
   Collisions,
 } from "../entities/collisions";
-
-/*
-public broadcast<T extends keyof ConstructorsObject>(
-    msg: T,
-    ...args: ConstructorsInnerTypes[T]
-  ) {
-    this.app.publish("global", pack(this.construct_packet(msg, ...args)), true);
-  }
-*/
-
-/**
- * a class that controls broadcasting packets from objects
- */
-class OutBoundPackets {
-  public packets: any[] = [];
-
-  public add<T extends keyof ConstructorsObject>(
-    msg: T,
-    ...args: ConstructorsInnerTypes[T]
-  ) {
-    this.packets.push([msg, args]);
-  }
-
-  public clear() {
-    this.packets = [];
-  }
-
-  get length() {
-    return this.packets.length;
-  }
-}
+import { GameNetworking } from "../networking";
 
 /**
  * a gameobject is like an... object??? i mean... it's just a game object
@@ -50,17 +16,17 @@ export class GameObject {
   public collision: CollisionObject | null = null;
   public move_out_collision = true;
   public rip = false;
-  public outbound = new OutBoundPackets();
 
   //@ts-ignore
-  public step(dt: number, c?: Collisions) {}
+  public step(dt: number, network?: GameNetworking, c?: Collisions) {}
 
   public on_collision(
     //@ts-ignore
     other: GameObject,
     //@ts-ignore
-    response: CollisionResponse
+    response: CollisionResponse,
     //@ts-ignore
+    network?: GameNetworking,
   ): void {
     if (this.collision == null) return;
   }
