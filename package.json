@@ -12,7 +12,12 @@
   "dependencies": {
     "@types/node": "^22.14.1",
     "canvas": "^3.1.2",
+    "image-size": "^2.0.2",
+    "minimist": "^1.2.8",
     "msgpackr": "^1.11.4",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.54.0"
+  },
+  "devDependencies": {
+    "@types/minimist": "^1.2.5"
   }
 }

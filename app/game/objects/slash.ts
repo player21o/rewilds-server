@@ -23,7 +23,7 @@ export class Slash extends GameObject {
     range: number,
     arc: number,
     duration: number,
-    damage: number,
+    damage: number
   ) {
     super();
     this.entity = e;
@@ -40,7 +40,7 @@ export class Slash extends GameObject {
       e.collision.radius,
       range,
       e.direction,
-      arc,
+      arc
     );
   }
 
@@ -57,7 +57,7 @@ export class Slash extends GameObject {
   public on_collision(
     other: GameObject,
     _resp: CollisionResponse,
-    n: GameNetworking,
+    n: GameNetworking
   ): void {
     if (
       other instanceof Citizen &&
@@ -89,7 +89,7 @@ export class Slash extends GameObject {
               other.x,
               other.y,
               this.entity.x,
-              this.entity.y,
+              this.entity.y
             );
           }
 

@@ -60,7 +60,7 @@ export class GameNetworking {
             const propName = props[i] as keyof typeof constructor;
             const converterPair = constructor[propName] as readonly [
               (val: any) => any,
-              (val: any) => any
+              (val: any) => any,
             ];
 
             formatted.push(converterPair[1](sliced[i]));
@@ -90,7 +90,7 @@ export class GameNetworking {
       const propName = prop as keyof typeof constructor;
       const converterPair = constructor[propName] as readonly [
         (val: any) => any,
-        (val: any) => any
+        (val: any) => any,
       ];
 
       return converterPair[0](args[i]);
