@@ -54,10 +54,10 @@ export default {
         citizen.set("growling", false);
         break;
       case "left_button_start":
-        citizen.pressing_button = true;
+        citizen.set("charging", true);
         break;
       case "left_button_finish":
-        citizen.pressing_button = false;
+        citizen.set("charging", false);
         citizen.charge = 0;
         break;
       case "block":

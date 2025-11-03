@@ -38,8 +38,8 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
   public private_data_changes = { bits: 0b0, data: [] as any[] };
 
   public moving = false;
+  public charging = false;
   public charge = 0;
-  public pressing_button = false;
 
   public collision;
 
@@ -141,7 +141,7 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
     this.state_manager.step(dt);
     this.state = this.state_manager.state;
 
-    if (this.pressing_button) {
+    if (this.charging) {
       this.charge += 1 * dt;
     }
   }
