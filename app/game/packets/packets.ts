@@ -53,8 +53,12 @@ export default {
       case "growl_stop":
         citizen.set("growling", false);
         break;
-      case "attack":
-        citizen.state_manager.set("attack");
+      case "left_button_start":
+        citizen.pressing_button = true;
+        break;
+      case "left_button_finish":
+        citizen.pressing_button = false;
+        citizen.charge = 0;
         break;
       case "block":
         citizen.state_manager.set("block");
