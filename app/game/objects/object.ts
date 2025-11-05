@@ -18,7 +18,12 @@ export class GameObject {
   public rip = false;
 
   //@ts-ignore
-  public step(dt: number, network?: GameNetworking, c?: Collisions) {}
+  public step(
+    dt: number,
+    network?: GameNetworking,
+    c?: Collisions,
+    extra?: any
+  ) {}
 
   public on_collision(
     //@ts-ignore
@@ -26,7 +31,7 @@ export class GameObject {
     //@ts-ignore
     response: CollisionResponse,
     //@ts-ignore
-    network?: GameNetworking,
+    network?: GameNetworking
   ): void {
     if (this.collision == null) return;
   }

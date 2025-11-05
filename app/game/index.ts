@@ -17,7 +17,7 @@ export class GameServer {
         "hui",
         Math.random() * 50 + 100,
         Math.random() * 50 + 100,
-        this.entities,
+        this.entities
       );
       citizen.weapon = "axe";
       citizen.shield = "shield_wooden";
@@ -37,7 +37,7 @@ export class GameServer {
     this.last_time = now;
 
     this.entities_updates.push(
-      ...this.entities.update(dt).map((u: any) => [u[0], u[2], ...u[1]]),
+      ...this.entities.update(dt).map((u: any) => [u[0], u[2], ...u[1]])
     );
 
     const tickLength = 1000 / ticks;
@@ -45,18 +45,6 @@ export class GameServer {
   }
 
   private launch_game_loop(ticks: number, update_ticks: number) {
-    setInterval(() => {
-      const dt = (Date.now() - this.last_time) / 1000;
-
-      this.entities_updates.push(
-        ...this.entities.update(dt).map((u) => [u[0], u[2], ...u[1]]),
-      );
-
-      this.last_time = Date.now();
-    }, 1000 / ticks);
-
-    this.last_time = Date.now();
-
     this.game_loop(ticks);
 
     setInterval(() => {
@@ -75,7 +63,7 @@ export class GameServer {
           p.send(
             "private",
             p.citizen.private_data_changes.bits,
-            p.citizen.private_data_changes.data,
+            p.citizen.private_data_changes.data
           );
           p.citizen.private_data_changes.bits = 0b0;
           p.citizen.private_data_changes.data = [];
@@ -84,7 +72,10 @@ export class GameServer {
         if (p.helloed && !p.welcomed) {
           p.welcomed = true;
           p.send("snapshot", this.entities.snapshot);
-          if (p.citizen != null) p.send("your_sid", p.citizen.sid);
+
+          setTimeout(() => {
+            if (p.citizen != null) p.send("your_sid", p.citizen.sid);
+          }, 100);
         }
       });
     }, 1000 / 5);

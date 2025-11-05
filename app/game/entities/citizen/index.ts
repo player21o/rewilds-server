@@ -79,25 +79,34 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
     this.collision = new Circle(this.sid, this.x, this.y, 12, 0.6);
   }
 
-  public step(dt: number) {
+  public pre_step(dt: number) {
+    const r: { prev_props: any } = { prev_props: null };
+
+    r.prev_props = constructors_inner_keys["CitizenPrivateData"].map((prop) => {
+      const propName =
+        prop as keyof (typeof constructors_object)["CitizenPrivateData"];
+      const converterPair = constructors_object["CitizenPrivateData"][
+        propName
+      ] as readonly [(val: any) => any, (val: any) => any];
+
+      return converterPair[0]((this as any)[prop]);
+    });
+
+    return r;
+  }
+
+  public step(
+    dt: number,
+    _a: undefined,
+    _b: undefined,
+    { prev_props }: { prev_props: any }
+  ) {
     let prev_bits = this.private_data_changes.bits;
     let changed_bits = 0b0;
 
     if (this.health <= 0 && !this.died) this.die();
 
     if (!this.new_one) {
-      const prev_props = constructors_inner_keys["CitizenPrivateData"].map(
-        (prop) => {
-          const propName =
-            prop as keyof (typeof constructors_object)["CitizenPrivateData"];
-          const converterPair = constructors_object["CitizenPrivateData"][
-            propName
-          ] as readonly [(val: any) => any, (val: any) => any];
-
-          return converterPair[0]((this as any)[prop]);
-        }
-      );
-
       this.step_states(dt);
 
       const changed_props: any[] = [];

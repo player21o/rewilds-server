@@ -16,7 +16,7 @@ export type Collision<T extends Entity<any>> = (Polygon | Circle) & {
 */
 
 export class Entity<
-  K extends keyof ConstructorsObject = "Entity"
+  K extends keyof ConstructorsObject = "Entity",
 > extends GameObject {
   public sid: number = -1;
 
@@ -44,13 +44,15 @@ export class Entity<
         const propName = prop as keyof typeof constructor;
         const converterPair = constructor[propName] as readonly [
           (val: any) => any,
-          (val: any) => any
+          (val: any) => any,
         ];
 
         return converterPair[0]((this as any)[prop]);
       })
     ) as any;
   }
+
+  public pre_step(dt: number): any {}
 
   public update(dt: number, c: Collisions) {
     const constructor = constructors_object[this.constructor_name];
@@ -60,19 +62,21 @@ export class Entity<
           const propName = prop as keyof typeof constructor;
           const converterPair = constructor[propName] as readonly [
             (val: any) => any,
-            (val: any) => any
+            (val: any) => any,
           ];
 
           return converterPair[0]((this as any)[prop]);
         })
       : this.snapshot();
 
+    const pre_step_info = this.pre_step(dt);
+
     Object.keys(this.to_set).forEach((key) => {
       this[key as keyof this] = this.to_set[key];
       delete this.to_set[key];
     });
 
-    this.step(dt);
+    this.step(dt, undefined, undefined, pre_step_info);
     this.update_collision_pos(c);
 
     return updates;
