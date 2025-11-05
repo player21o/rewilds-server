@@ -55,10 +55,12 @@ function handle_pointer(entity: Citizen) {
 
 export default {
   idle: {
-    flow: ["attack", "charge", "block"],
-    step(dt, entity, _manager) {
+    flow: ["attack", "charge", "block", "spin"],
+    step(dt, entity, manager) {
       handle_movement(entity, dt);
       handle_pointer(entity);
+
+      if (entity.charge >= 1) manager.set("spin");
     },
   },
   charge: {
@@ -127,4 +129,10 @@ export default {
     },
   },
   dead: {},
+  spin: {
+    flow: ["idle"],
+    step(dt, entity, manager) {
+      if (manager.duration >= 2) manager.set("idle");
+    },
+  },
 } as States<Citizen, Citizen["state"]>;
