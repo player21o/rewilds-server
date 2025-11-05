@@ -131,6 +131,10 @@ export default {
   dead: {},
   spin: {
     flow: ["idle"],
+    enter(entity, manager, entities) {
+      entity.charging = false;
+      entity.charge = 0;
+    },
     step(dt, entity, manager) {
       if (manager.duration >= 2) manager.set("idle");
     },
