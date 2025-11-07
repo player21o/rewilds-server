@@ -58,7 +58,7 @@ export default {
         break;
       case "left_button_finish":
         citizen.set("charging", false);
-        if (citizen.charge < 1) citizen.state_manager.set("attack");
+        if (citizen.charging) citizen.state_manager.set("attack");
         citizen.charge = 0;
         break;
       case "block":

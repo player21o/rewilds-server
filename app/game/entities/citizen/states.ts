@@ -4,8 +4,11 @@ import { Slash } from "../../objects/slash";
 import { lookAt } from "../../utils";
 import { States } from "../state";
 
-function handle_movement(entity: Citizen, dt: number) {
-  const speed = entity.growling ? entity.data.speed * 1.333 : entity.data.speed;
+function handle_movement(entity: Citizen, dt: number, allow_growling = true) {
+  const speed =
+    entity.growling && allow_growling
+      ? entity.data.speed * 1.333
+      : entity.data.speed;
   //w, a, s, d
   const final_vector = [0, 0];
 
@@ -37,7 +40,7 @@ function handle_movement(entity: Citizen, dt: number) {
   entity.y += speed * final_vector[1] * dt;
 
   if (entity.stamina <= 0) entity.growling = false;
-  if (entity.growling && entity.moving) {
+  if (allow_growling && entity.growling && entity.moving) {
     entity.stamina -= entity.data.staminaUsage * dt;
   } else if (entity.stamina < 1) {
     entity.stamina += 0.1 * dt;
@@ -61,13 +64,6 @@ export default {
       handle_pointer(entity);
 
       if (entity.charge >= 1) manager.set("spin");
-    },
-  },
-  charge: {
-    flow: ["idle"],
-    step(dt, entity, _manager) {
-      handle_movement(entity, dt);
-      handle_pointer(entity);
     },
   },
   attack: {
@@ -131,7 +127,7 @@ export default {
   dead: {},
   spin: {
     flow: ["idle"],
-    enter(entity, manager, entities) {
+    enter(entity, _manager, _entities) {
       entity.charging = false;
       entity.charge = 0;
     },
@@ -144,7 +140,7 @@ export default {
       ];
       entity.x += direction[0] * 150 * (duration - manager.duration) * 2 * dt;
       entity.y += direction[1] * 150 * (duration - manager.duration) * 2 * dt;
-      handle_movement(entity, dt);
+      handle_movement(entity, dt, false);
     },
   },
 } as States<Citizen, Citizen["state"]>;
