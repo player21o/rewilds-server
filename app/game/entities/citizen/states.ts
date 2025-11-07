@@ -127,9 +127,21 @@ export default {
   dead: {},
   spin: {
     flow: ["idle"],
-    enter(entity, _manager, _entities) {
+    enter(entity, _manager, entities) {
       entity.charging = false;
       entity.charge = 0;
+
+      const weapon = constants.weapons[entity.weapon];
+
+      entities.add(
+        new Slash(
+          entity,
+          weapon.meleeRange,
+          Math.PI * 2,
+          0.6,
+          weapon.meleeDamage
+        )
+      );
     },
     step(dt, entity, manager) {
       const duration = 0.6;
