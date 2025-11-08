@@ -49,7 +49,10 @@ export class Slash extends GameObject {
     this.y = this.entity.y;
 
     this.timer += dt;
-    if (this.timer >= this.duration) this.destroy();
+    if (this.timer >= this.duration) {
+      this.destroy();
+      console.log("destroyed");
+    }
 
     if (c != undefined) this.update_collision_pos(c);
   }
@@ -59,6 +62,7 @@ export class Slash extends GameObject {
     _resp: CollisionResponse,
     n: GameNetworking
   ): void {
+    console.log("collisioned");
     if (
       other instanceof Citizen &&
       this.entity.team != other.team &&

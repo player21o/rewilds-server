@@ -61,7 +61,7 @@ export class EntitiesManager {
     this.collision_system.check().forEach((cols) => {
       const resp = build_collision_response(
         this.collision_map[cols[0]].collision!,
-        this.collision_map[cols[1]].collision!,
+        this.collision_map[cols[1]].collision!
       );
       if (resp != null) {
         const entity_a = this.collision_map[cols[0]];
@@ -137,10 +137,6 @@ export class EntitiesManager {
       !(e instanceof Entity) && !(e instanceof GameObject)
         ? this.sid_map[e as number]
         : e;
-
-    if (entity instanceof Entity)
-      this.entities.splice(this.entities.indexOf(entity), 1);
-    else this.objects.splice(this.objects.indexOf(entity), 1);
 
     if (entity instanceof Entity) {
       this.entities.splice(this.entities.indexOf(entity), 1);
