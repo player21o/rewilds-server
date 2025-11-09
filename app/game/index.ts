@@ -1,6 +1,6 @@
 // game.ts
 import { EntitiesManager } from "./entities";
-import { Citizen } from "./entities/citizen";
+import { Player } from "./entities/player";
 import { GameNetworking } from "./networking";
 
 export class GameServer {
@@ -12,8 +12,9 @@ export class GameServer {
 
   constructor(port: number, tickrate: number, upd_tickrate: number) {
     this.network = new GameNetworking(port, (peer) => {
-      const citizen = new Citizen(
+      const citizen = new Player(
         "hero",
+        "male",
         "hui",
         Math.random() * 50 + 100,
         Math.random() * 50 + 100,

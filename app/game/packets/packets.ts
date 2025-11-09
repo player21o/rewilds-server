@@ -3,7 +3,7 @@ import {
   ConstructorsInnerTypes,
   ConstructorsObject,
 } from "../../common/constructors";
-import { Citizen } from "../entities/citizen";
+import { Player } from "../entities/player";
 
 export type Ws = WebSocket<unknown> & { id?: number };
 export type Peer = {
@@ -13,7 +13,7 @@ export type Peer = {
   ) => void;
   id: number;
   ws: Ws;
-  citizen: Citizen | null;
+  citizen: Player | null;
   helloed: boolean;
   welcomed: boolean;
 };
