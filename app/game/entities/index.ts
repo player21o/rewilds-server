@@ -8,7 +8,7 @@ export class EntitiesManager {
   private sid_map: { [sid: number]: Entity } = {};
   private entities: Entity[] = [];
   public objects: GameObject[] = [];
-  private sid_counter = 0;
+  private sid_pool: number[] = Array.from(Array(10).keys());
   public collision_system = new Collisions(10000, 10000);
   private collision_counter = 0;
   private collision_map: { [id: number]: Entity | GameObject } = {};
@@ -27,8 +27,7 @@ export class EntitiesManager {
 
   public add(e: Entity<any> | GameObject) {
     if (e instanceof Entity) {
-      e.sid = this.sid_counter;
-      this.sid_counter += 1;
+      e.sid = this.sid_pool.shift()!;
       this.sid_map[e.sid] = e;
       this.entities.push(e);
       this.on_entity_created_callbacks.forEach((cb) => cb(e));
@@ -141,6 +140,7 @@ export class EntitiesManager {
     if (entity instanceof Entity) {
       this.entities.splice(this.entities.indexOf(entity), 1);
       delete this.sid_map[entity.sid];
+      this.sid_pool.unshift(entity.sid);
     } else {
       this.objects.splice(this.objects.indexOf(entity), 1);
     }
