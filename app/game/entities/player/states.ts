@@ -58,7 +58,7 @@ function handle_pointer(entity: Player) {
 
 export default {
   idle: {
-    flow: ["attack", "charge", "block", "spin"],
+    flow: ["attack", "charge", "block", "spin", "roll"],
     step(dt, entity, manager) {
       handle_movement(entity, dt);
       handle_pointer(entity);
@@ -66,8 +66,22 @@ export default {
       const weapon = constants.weapons[entity.weapon];
 
       if (entity.charging) entity.stamina -= weapon.chargeStaminaUsage * dt;
+      if (entity.stamina <= 0 && entity.charging) entity.charging = false;
       if (entity.charge >= 1 && entity.stamina > 0)
         manager.set(weapon.onCharged);
+    },
+  },
+  roll: {
+    flow: ["idle"],
+    step(dt, entity, manager) {
+      const duration = 1;
+      if (manager.duration >= duration) manager.set("idle");
+      const direction = [
+        Math.cos(entity.direction),
+        Math.sin(entity.direction),
+      ];
+      entity.x += direction[0] * 150 * dt;
+      entity.y += direction[1] * 150 * dt;
     },
   },
   attack: {

@@ -64,6 +64,9 @@ export default {
       case "block":
         citizen.state_manager.set("block");
         break;
+      case "roll":
+        citizen.state_manager.set("roll");
+        break;
     }
   },
 } as Packets;
