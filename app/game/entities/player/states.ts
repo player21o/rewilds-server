@@ -74,7 +74,7 @@ export default {
   roll: {
     flow: ["idle"],
     step(dt, entity, manager) {
-      const duration = 1;
+      const duration = 0.8;
       if (manager.duration >= duration) manager.set("idle");
       const direction = [
         Math.cos(entity.direction),
