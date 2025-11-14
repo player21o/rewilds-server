@@ -29,6 +29,29 @@ export class GameServer {
 
     this.entities = new EntitiesManager(this.network);
 
+    /*
+    for (let x = 0; x < 4; x++) {
+      for (let y = 0; y < 3; y++) {
+        this.entities.add(
+          new TestBot(
+            "hero",
+            "male",
+            "test",
+            x * 50 + 50,
+            y * 50 + 50,
+            this.entities
+          )
+        );
+      }
+    }
+      */
+
+    /*
+    this.entities.add(
+      new TestBot("hero", "male", "test", 1 * 100, 1 * 100, this.entities)
+    );
+    */
+
     this.launch_game_loop(tickrate, upd_tickrate);
   }
 

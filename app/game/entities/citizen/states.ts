@@ -1,4 +1,4 @@
-import { Citizen } from ".";
+import type { Citizen } from ".";
 import constants from "../../../common/constants";
 import { Slash } from "../../objects/slash";
 import { lookAt } from "../../utils";
@@ -14,32 +14,6 @@ export function handle_movement(
     entity.growling && allow_growling
       ? entity.data.speed * 1.333
       : entity.data.speed;
-  //w, a, s, d
-  /*
-  const final_vector = [0, 0];
-
-  [
-    [0, 1],
-    [1, 0],
-    [0, -1],
-    [-1, 0],
-  ]
-    .map((vec, i) => ((entity.keys >> i) % 2 != 0 ? [0, 0] : vec))
-    .forEach((vec) => {
-      final_vector[0] += vec[0];
-      final_vector[1] += vec[1];
-    });
-
-  const vec_len = (final_vector[0] ** 2 + final_vector[1] ** 2) ** 0.5;
-
-  if (vec_len == 0) {
-    final_vector[0] = 0;
-    final_vector[1];
-  } else {
-    final_vector[0] = final_vector[0] / vec_len;
-    final_vector[1] = final_vector[1] / vec_len;
-  }
-    */
 
   entity.moving =
     entity.inputs.movement_vector[0] != 0 ||
@@ -49,15 +23,6 @@ export function handle_movement(
   entity.y += speed * entity.inputs.movement_vector[1] * dt;
 
   if (custom != undefined) custom(entity);
-
-  /*
-    if (entity.stamina <= 0) entity.growling = false;
-  if (allow_growling && entity.growling && entity.moving) {
-    entity.stamina -= entity.data.staminaUsage * dt;
-  } else if (entity.stamina < 1) {
-    entity.stamina += 0.1 * dt;
-  }
-    */
 }
 
 export function handle_pointer(entity: Citizen) {
@@ -76,15 +41,6 @@ export default {
       handle_movement(entity, dt);
 
       handle_pointer(entity);
-
-      /*
-      const weapon = constants.weapons[entity.weapon];
-
-      if (entity.charging) entity.stamina -= weapon.chargeStaminaUsage * dt;
-      if (entity.stamina <= 0 && entity.charging) entity.charging = false;
-      if (entity.charge >= 1 && entity.stamina > 0)
-        manager.set(weapon.onCharged);
-      */
     },
   },
   roll: {
