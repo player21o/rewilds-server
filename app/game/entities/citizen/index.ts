@@ -6,6 +6,11 @@ import { Circle } from "../collisions";
 import { EntitiesManager } from "..";
 import states from "./states";
 
+type CitizenInputs = {
+  movement_vector: [x: number, y: number];
+  look: [x: number, y: number];
+};
+
 export class Citizen extends Entity<"Citizen"> implements CitizenType {
   public name: string;
   public x: number;
@@ -21,6 +26,11 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
   public type: CitizenType["type"];
   public growling = false;
   public maxArmor: number;
+
+  public inputs: CitizenInputs = {
+    movement_vector: [0, 0],
+    look: [this.y, this.x + 1],
+  };
 
   public data;
   public state_manager;

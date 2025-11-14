@@ -1,66 +1,49 @@
 import type { Player } from ".";
 import constants from "../../../common/constants";
-import { Slash } from "../../objects/slash";
-import { lookAt } from "../../utils";
 import { States } from "../state";
+import { default as citizen_states, handle_pointer } from "../citizen/states";
+import { handle_movement as handle_citizen_movement } from "../citizen/states";
 
 function handle_movement(entity: Player, dt: number, allow_growling = true) {
-  const speed =
-    entity.growling && allow_growling
-      ? entity.data.speed * 1.333
-      : entity.data.speed;
-  //w, a, s, d
-  const final_vector = [0, 0];
-
-  [
-    [0, 1],
-    [1, 0],
-    [0, -1],
-    [-1, 0],
-  ]
-    .map((vec, i) => ((entity.keys >> i) % 2 != 0 ? [0, 0] : vec))
-    .forEach((vec) => {
-      final_vector[0] += vec[0];
-      final_vector[1] += vec[1];
-    });
-
-  const vec_len = (final_vector[0] ** 2 + final_vector[1] ** 2) ** 0.5;
-
-  if (vec_len == 0) {
-    final_vector[0] = 0;
-    final_vector[1];
-  } else {
-    final_vector[0] = final_vector[0] / vec_len;
-    final_vector[1] = final_vector[1] / vec_len;
-  }
-
-  entity.moving = final_vector[0] != 0 || final_vector[1] != 0;
-
-  entity.x += speed * final_vector[0] * dt;
-  entity.y += speed * final_vector[1] * dt;
-
-  if (entity.stamina <= 0) entity.growling = false;
-  if (allow_growling && entity.growling && entity.moving) {
-    entity.stamina -= entity.data.staminaUsage * dt;
-  } else if (entity.stamina < 1) {
-    entity.stamina += 0.1 * dt;
-  }
-}
-
-function handle_pointer(entity: Player) {
-  entity.direction = lookAt(
-    entity.x,
-    entity.y,
-    entity.x + entity.pointerX,
-    entity.y + entity.pointerY
-  );
+  handle_citizen_movement(entity, dt, allow_growling, () => {
+    if (entity.stamina <= 0) entity.growling = false;
+    if (allow_growling && entity.growling && entity.moving) {
+      entity.stamina -= entity.data.staminaUsage * dt;
+    } else if (entity.stamina < 1) {
+      entity.stamina += 0.1 * dt;
+    }
+  });
 }
 
 export default {
+  ...citizen_states,
   idle: {
-    flow: ["attack", "charge", "block", "spin", "roll"],
+    ...citizen_states.idle,
     step(dt, entity, manager) {
       handle_movement(entity, dt);
+
+      handle_pointer(entity);
+
+      const weapon = constants.weapons[entity.weapon];
+
+      if (entity.charging) entity.stamina -= weapon.chargeStaminaUsage * dt;
+      if (entity.stamina <= 0 && entity.charging) entity.charging = false;
+      if (entity.charge >= 1 && entity.stamina > 0) {
+        entity.charging = false;
+        entity.charge = 0;
+        manager.set(weapon.onCharged);
+      }
+    },
+  },
+} as States<Player, Player["state"]>;
+
+/*
+export default {
+  idle: {
+    ...citizen_states.idle,
+    step(dt, entity, manager) {
+      handle_movement(entity, dt);
+
       handle_pointer(entity);
 
       const weapon = constants.weapons[entity.weapon];
@@ -174,3 +157,4 @@ export default {
     },
   },
 } as States<Player, Player["state"]>;
+*/

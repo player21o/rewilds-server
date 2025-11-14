@@ -13,7 +13,6 @@ export class Player extends Citizen {
   public charge = 0;
   public private_data_changes = { bits: 0b0, data: [] as any[] };
   public stamina = 1;
-  public keys = 0;
   public pointerX = 0;
   public pointerY = 0;
 

@@ -29,10 +29,8 @@ export default {
   pointer({ citizen }, pX, pY) {
     if (citizen == null) return;
 
-    //const [pointerX, pointerY] = [citizen.x + pX, citizen.y + pY];
-
-    citizen.pointerX = pX;
-    citizen.pointerY = pY;
+    citizen.inputs.look[0] = citizen.x + pX;
+    citizen.inputs.look[1] = citizen.y + pY;
   },
   hello(peer) {
     peer.helloed = true;
@@ -40,8 +38,31 @@ export default {
   keys({ citizen }, keys) {
     if (citizen == null) return;
 
-    citizen.keys = keys;
-    //console.log(keys);
+    const final_vector: [number, number] = [0, 0];
+
+    [
+      [0, 1],
+      [1, 0],
+      [0, -1],
+      [-1, 0],
+    ]
+      .map((vec, i) => ((keys >> i) % 2 != 0 ? [0, 0] : vec))
+      .forEach((vec) => {
+        final_vector[0] += vec[0];
+        final_vector[1] += vec[1];
+      });
+
+    const vec_len = (final_vector[0] ** 2 + final_vector[1] ** 2) ** 0.5;
+
+    if (vec_len == 0) {
+      final_vector[0] = 0;
+      final_vector[1];
+    } else {
+      final_vector[0] = final_vector[0] / vec_len;
+      final_vector[1] = final_vector[1] / vec_len;
+    }
+
+    citizen.inputs.movement_vector = final_vector;
   },
   action({ citizen }, action) {
     if (citizen == null) return;
