@@ -23,3 +23,10 @@ export class TestBot extends Citizen {
     this.step_states(dt);
   }
 }
+
+export class AttackBot extends Citizen {
+  public step(dt: number, _a: undefined, _b: undefined, _p: any) {
+    if (this.health <= 0 && !this.died) this.die();
+    this.step_states(dt);
+  }
+}

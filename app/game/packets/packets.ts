@@ -29,8 +29,8 @@ export default {
   pointer({ citizen }, pX, pY) {
     if (citizen == null) return;
 
-    citizen.inputs.look[0] = citizen.x + pX;
-    citizen.inputs.look[1] = citizen.y + pY;
+    citizen.pointerX = pX;
+    citizen.pointerY = pY;
   },
   hello(peer) {
     peer.helloed = true;

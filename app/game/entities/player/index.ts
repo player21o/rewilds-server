@@ -27,7 +27,7 @@ export class Player extends Citizen {
     super(type, kind, name, x, y, e, states);
   }
 
-  public pre_step(dt: number) {
+  public pre_step(_dt: number) {
     const r: { prev_props: any } = { prev_props: null };
 
     r.prev_props = constructors_inner_keys["CitizenPrivateData"].map((prop) => {
@@ -49,6 +49,9 @@ export class Player extends Citizen {
     _b: undefined,
     { prev_props }: { prev_props: any }
   ) {
+    this.inputs.look[0] = this.x + this.pointerX;
+    this.inputs.look[1] = this.y + this.pointerY;
+
     let prev_bits = this.private_data_changes.bits;
     let changed_bits = 0b0;
 

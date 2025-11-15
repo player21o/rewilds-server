@@ -37,6 +37,10 @@ export function handle_pointer(entity: Citizen) {
 export default {
   idle: {
     flow: ["attack", "charge", "block", "spin", "roll"],
+    enter(entity) {
+      entity.move_out_collision = true;
+      entity.hit_sid = [];
+    },
     step(dt, entity, _manager) {
       handle_movement(entity, dt);
 
@@ -45,6 +49,9 @@ export default {
   },
   roll: {
     flow: ["idle"],
+    enter(entity) {
+      entity.move_out_collision = false;
+    },
     step(dt, entity, manager) {
       const duration = 0.8;
       if (manager.duration >= duration) manager.set("idle");
@@ -52,8 +59,8 @@ export default {
         Math.cos(entity.direction),
         Math.sin(entity.direction),
       ];
-      entity.x += direction[0] * 150 * dt;
-      entity.y += direction[1] * 150 * dt;
+      entity.x += direction[0] * 200 * dt;
+      entity.y += direction[1] * 200 * dt;
     },
   },
   attack: {

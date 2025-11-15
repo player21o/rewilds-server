@@ -2,9 +2,11 @@ import { CitizenType } from "../../../common/interfaces";
 import { Entity } from "../entity";
 import { StateManager, States } from "../state";
 import constants from "../../../common/constants";
-import { Circle } from "../collisions";
+import { Circle, CollisionResponse } from "../collisions";
 import { EntitiesManager } from "..";
 import states from "./states";
+import { GameNetworking } from "../../networking";
+import { GameObject } from "../../objects/object";
 
 type CitizenInputs = {
   movement_vector: [x: number, y: number];
@@ -37,6 +39,8 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
   public died = false;
   public moving = false;
   public collision;
+
+  public hit_sid: number[] = [];
 
   public constructor(
     type: CitizenType["type"],
@@ -90,5 +94,20 @@ export class Citizen extends Entity<"Citizen"> implements CitizenType {
   public die() {
     this.died = true;
     this.state_manager.set("dying", true);
+  }
+
+  public on_collision(
+    other: GameObject,
+    _response: CollisionResponse,
+    _network?: GameNetworking
+  ): void {
+    if (
+      other instanceof Citizen &&
+      this.state == "roll" &&
+      !this.hit_sid.includes(other.sid)
+    ) {
+      other.set("health", (hp) => hp - 1);
+      this.hit_sid.push(other.sid);
+    }
   }
 }

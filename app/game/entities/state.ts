@@ -16,8 +16,8 @@ export class StateManager<T = any> {
     ents: EntitiesManager
   ) {
     this.states = states;
-    this.set(first_state);
     this.entity = entity;
+    this.set(first_state);
     this.entities = ents;
   }
 
@@ -58,7 +58,7 @@ export class StateManager<T = any> {
 
 export type States<
   T extends Entity<any> = Entity<"Entity">,
-  S extends string | number | symbol = any
+  S extends string | number | symbol = any,
 > = {
   [E in S]: {
     flow?: S[];
