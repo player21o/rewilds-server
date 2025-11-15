@@ -85,7 +85,7 @@ export class Collisions {
         return;
       }
 
-      const objectsInCell = Array.from(cell);
+      const objectsInCell: number[] = Array.from(cell);
 
       for (let i = 0; i < objectsInCell.length; i++) {
         for (let j = i + 1; j < objectsInCell.length; j++) {

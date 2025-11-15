@@ -8,7 +8,7 @@ export class EntitiesManager {
   private sid_map: { [sid: number]: Entity } = {};
   private entities: Entity[] = [];
   public objects: GameObject[] = [];
-  private sid_pool: number[] = Array.from(Array(10).keys());
+  private sid_pool: number[] = Array.from(Array(1000).keys());
   public collision_system = new Collisions(10000, 10000);
   private collision_counter = 0;
   private collision_map: { [id: number]: Entity | GameObject } = {};
