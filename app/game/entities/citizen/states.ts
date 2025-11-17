@@ -133,7 +133,8 @@ export default {
           weapon.meleeRange,
           Math.PI * 2,
           0.6,
-          weapon.meleeDamage
+          weapon.meleeDamage,
+          0
         )
       );
     },

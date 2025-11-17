@@ -1,6 +1,7 @@
 // game.ts
 import { EntitiesManager } from "./entities";
 import { Player } from "./entities/player";
+import { AttackBot } from "./entities/test/testbot";
 import { GameNetworking } from "./networking";
 
 export class GameServer {
@@ -28,6 +29,10 @@ export class GameServer {
     });
 
     this.entities = new EntitiesManager(this.network);
+
+    this.entities.add(
+      new AttackBot("hero", "male", "bot", 10, 10, this.entities)
+    );
 
     this.launch_game_loop(tickrate, upd_tickrate);
   }

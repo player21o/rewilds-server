@@ -6,6 +6,7 @@ import { GameObject } from "./object";
 export class BotSight extends GameObject {
   private entity: Citizen;
   public entities = new Set<Citizen>();
+  public move_out_collision = false;
 
   constructor(e: Citizen, radius = 100) {
     super();

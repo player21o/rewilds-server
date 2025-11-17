@@ -17,13 +17,15 @@ export class Slash extends GameObject {
   private hits: number[] = [];
   public move_out_collision = false;
   private damage: number;
+  private delay: number;
 
   constructor(
     e: Citizen,
     range: number,
     arc: number,
     duration: number,
-    damage: number
+    damage: number,
+    delay = 0.25
   ) {
     super();
     this.entity = e;
@@ -32,6 +34,7 @@ export class Slash extends GameObject {
     this.y = e.y;
     this.duration = duration;
     this.damage = damage;
+    this.delay = delay;
 
     this.collision = new Arc(
       0,
@@ -42,16 +45,18 @@ export class Slash extends GameObject {
       e.direction,
       arc
     );
+    this.collision.disabled = true;
   }
 
   public step(dt: number, _n: GameNetworking, c?: Collisions): void {
     this.x = this.entity.x;
     this.y = this.entity.y;
 
+    this.delay -= dt;
+
     this.timer += dt;
     if (this.timer >= this.duration) {
       this.destroy();
-      console.log("destroyed");
     }
 
     if (c != undefined) this.update_collision_pos(c);
@@ -62,8 +67,8 @@ export class Slash extends GameObject {
     _resp: CollisionResponse,
     n: GameNetworking
   ): void {
-    console.log("collisioned");
     if (
+      this.delay <= 0 &&
       other instanceof Citizen &&
       this.entity.team != other.team &&
       other.sid != this.entity.sid &&
@@ -81,6 +86,8 @@ export class Slash extends GameObject {
 
           return;
         }
+      } else if (other.state == "attack") {
+        this.destroy();
       } else {
         this.hits.push(other.sid);
 
