@@ -36,7 +36,7 @@ export function handle_pointer(entity: Citizen) {
 
 export default {
   idle: {
-    flow: ["attack", "charge", "block", "spin", "roll"],
+    flow: ["attack", "charge", "block", "spin", "roll", "kick"],
     enter(entity) {
       entity.move_out_collision = true;
       entity.hit_sid = [];
@@ -151,6 +151,7 @@ export default {
     },
   },
   kick: {
+    flow: ["idle"],
     step(dt, entity, manager) {
       const duration = 0.7;
       if (manager.duration >= duration) manager.set("idle");
