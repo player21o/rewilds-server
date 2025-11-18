@@ -69,10 +69,13 @@ export default {
 
     switch (action) {
       case "growl_start":
+        citizen.growling_timer = 0; //we dont use .set function because `growling_timer` is not synced with players
         citizen.set("growling", true); //we use this function because we need to change a value of entity outside the game loop
         break;
       case "growl_stop":
         citizen.set("growling", false);
+
+        if (citizen.growling_timer <= 0.2) citizen.state_manager.set("kick");
         break;
       case "left_button_start":
         citizen.set("charging", true);

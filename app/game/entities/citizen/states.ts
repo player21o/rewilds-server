@@ -150,4 +150,17 @@ export default {
       handle_movement(entity, dt, false);
     },
   },
+  kick: {
+    step(dt, entity, manager) {
+      const duration = 0.7;
+      if (manager.duration >= duration) manager.set("idle");
+
+      const direction = [
+        Math.cos(entity.direction),
+        Math.sin(entity.direction),
+      ];
+      entity.x += direction[0] * 150 * (duration - manager.duration) * 2 * dt;
+      entity.y += direction[1] * 150 * (duration - manager.duration) * 2 * dt;
+    },
+  },
 } as States<Citizen, Citizen["state"]>;

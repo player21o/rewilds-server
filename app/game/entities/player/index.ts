@@ -15,6 +15,7 @@ export class Player extends Citizen {
   public stamina = 1;
   public pointerX = 0;
   public pointerY = 0;
+  public growling_timer = 0;
 
   public constructor(
     type: CitizenType["type"],
@@ -104,6 +105,10 @@ export class Player extends Citizen {
     if (this.charging) {
       const weapon = constants.weapons[this.weapon];
       this.charge += dt / weapon.chargeTime;
+    }
+
+    if (this.growling) {
+      this.growling_timer += dt;
     }
   }
 }
